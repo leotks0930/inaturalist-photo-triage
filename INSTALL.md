@@ -10,7 +10,7 @@
 
 ## 一、解壓縮
 
-1. 找到收到的 `inaturalist-photo-triage-v0.5.0.zip`。
+1. 找到收到的 `inaturalist-photo-triage-v0.6.0.zip`。
 2. macOS：雙擊 ZIP，系統會解壓成一個資料夾。
 3. Windows：右鍵點擊 ZIP，選擇「解壓縮全部」。
 4. 打開解壓後的資料夾，確認裡面可以直接看到：
@@ -107,7 +107,7 @@ https://www.inaturalist.org/observations/upload
 
 ### 選擇照片後仍顯示沒有圖片
 
-請更新到 `0.5.0` 或更新版本。舊版可能無法處理 HEIC 等格式。
+請更新到 `0.6.0` 或更新版本。舊版可能無法處理 HEIC 等格式。
 
 ### 上傳卡住
 

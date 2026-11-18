@@ -278,6 +278,41 @@
       "{count} photos · Limit of {max} reached",
     "{count} 張照片": "{count} photos",
     "本批完成": "Batch complete"
+    ,
+    "調整顏色": "Adjust color",
+    "使用本機原檔即時調整；套用後會替換目前照片，本機原檔不變。":
+      "Adjust from the local original. Applying will replace the current photo; the local file is unchanged.",
+    "基本": "Basic",
+    "曲線": "Curves",
+    "光線": "Light",
+    "顏色": "Color",
+    "曝光": "Exposure",
+    "對比": "Contrast",
+    "亮部": "Highlights",
+    "陰影": "Shadows",
+    "白色": "Whites",
+    "黑色": "Blacks",
+    "色溫": "Temperature",
+    "色調": "Tint",
+    "飽和度": "Saturation",
+    "鮮豔度": "Vibrance",
+    "色相": "Hue",
+    "點擊新增控制點，拖曳調整曲線，右鍵刪除控制點。":
+      "Click to add a point, drag to adjust the curve, right-click to delete a point.",
+    "重設全部": "Reset all",
+    "套用調色": "Apply color",
+    "正在輸出調色…": "Rendering color adjustments…",
+    "無法產生調色照片。": "Could not generate the color-adjusted photo.",
+    "正在套用調色…": "Applying color adjustments…",
+    "已套用調色，可以繼續整理。":
+      "Color adjustments applied. You can continue reviewing.",
+    "照片已處理，但找不到新的照片項目。":
+      "The photo was processed, but its new item could not be found."
+    ,
+    "結束": "Finish",
+    "按住查看原圖": "Hold to view original",
+    "直方圖": "Histogram",
+    "雙擊重設": "Double-click to reset"
   };
 
   const zhCN = {
@@ -489,6 +524,40 @@
       "{count} 张 · 已达 {max} 张上限",
     "{count} 張照片": "{count} 张照片",
     "本批完成": "本批完成"
+    ,
+    "調整顏色": "调整颜色",
+    "使用本機原檔即時調整；套用後會替換目前照片，本機原檔不變。":
+      "使用本地原文件实时调整；套用后会替换当前照片，本地原文件不变。",
+    "基本": "基本",
+    "曲線": "曲线",
+    "光線": "光线",
+    "顏色": "颜色",
+    "曝光": "曝光",
+    "對比": "对比",
+    "亮部": "高光",
+    "陰影": "阴影",
+    "白色": "白色",
+    "黑色": "黑色",
+    "色溫": "色温",
+    "色調": "色调",
+    "飽和度": "饱和度",
+    "鮮豔度": "鲜艳度",
+    "色相": "色相",
+    "點擊新增控制點，拖曳調整曲線，右鍵刪除控制點。":
+      "点击添加控制点，拖动调整曲线，右键删除控制点。",
+    "重設全部": "重置全部",
+    "套用調色": "套用调色",
+    "正在輸出調色…": "正在输出调色…",
+    "無法產生調色照片。": "无法生成调色照片。",
+    "正在套用調色…": "正在套用调色…",
+    "已套用調色，可以繼續整理。": "已套用调色，可以继续整理。",
+    "照片已處理，但找不到新的照片項目。":
+      "照片已处理，但找不到新的照片项目。"
+    ,
+    "結束": "结束",
+    "按住查看原圖": "按住查看原图",
+    "直方圖": "直方图",
+    "雙擊重設": "双击重置"
   };
 
   const ja = {
@@ -699,6 +768,40 @@
       "{count} 枚 · 上限 {max} 枚に到達",
     "{count} 張照片": "{count} 枚の写真",
     "本批完成": "バッチ完了"
+    ,
+    "調整顏色": "色を調整",
+    "使用本機原檔即時調整；套用後會替換目前照片，本機原檔不變。":
+      "ローカル原画像からリアルタイム調整します。適用すると現在の写真が置き換わり、ローカルファイルは変更されません。",
+    "基本": "基本",
+    "曲線": "トーンカーブ",
+    "光線": "ライト",
+    "顏色": "カラー",
+    "曝光": "露出",
+    "對比": "コントラスト",
+    "亮部": "ハイライト",
+    "陰影": "シャドウ",
+    "白色": "白レベル",
+    "黑色": "黒レベル",
+    "色溫": "色温度",
+    "色調": "色合い",
+    "飽和度": "彩度",
+    "鮮豔度": "自然な彩度",
+    "色相": "色相",
+    "點擊新增控制點，拖曳調整曲線，右鍵刪除控制點。":
+      "クリックで点を追加、ドラッグで調整、右クリックで点を削除します。",
+    "重設全部": "すべてリセット",
+    "套用調色": "色調整を適用",
+    "正在輸出調色…": "色調整を出力中…",
+    "無法產生調色照片。": "色調整済み画像を作成できません。",
+    "正在套用調色…": "色調整を適用中…",
+    "已套用調色，可以繼續整理。": "色調整を適用しました。整理を続けられます。",
+    "照片已處理，但找不到新的照片項目。":
+      "写真は処理されましたが、新しい項目が見つかりません。"
+    ,
+    "結束": "終了",
+    "按住查看原圖": "長押しで元画像を表示",
+    "直方圖": "ヒストグラム",
+    "雙擊重設": "ダブルクリックでリセット"
   };
 
   const es = {
@@ -920,6 +1023,41 @@
       "{count} fotos · Límite de {max} alcanzado",
     "{count} 張照片": "{count} fotos",
     "本批完成": "Lote completado"
+    ,
+    "調整顏色": "Ajustar color",
+    "使用本機原檔即時調整；套用後會替換目前照片，本機原檔不變。":
+      "Ajusta desde el original local. Al aplicar, la foto actual se sustituye; el archivo local no cambia.",
+    "基本": "Básico",
+    "曲線": "Curvas",
+    "光線": "Luz",
+    "顏色": "Color",
+    "曝光": "Exposición",
+    "對比": "Contraste",
+    "亮部": "Luces",
+    "陰影": "Sombras",
+    "白色": "Blancos",
+    "黑色": "Negros",
+    "色溫": "Temperatura",
+    "色調": "Matiz",
+    "飽和度": "Saturación",
+    "鮮豔度": "Intensidad",
+    "色相": "Tono",
+    "點擊新增控制點，拖曳調整曲線，右鍵刪除控制點。":
+      "Haz clic para añadir un punto, arrastra para ajustar y haz clic derecho para eliminarlo.",
+    "重設全部": "Restablecer todo",
+    "套用調色": "Aplicar color",
+    "正在輸出調色…": "Generando ajustes de color…",
+    "無法產生調色照片。": "No se pudo generar la foto ajustada.",
+    "正在套用調色…": "Aplicando ajustes de color…",
+    "已套用調色，可以繼續整理。":
+      "Ajustes aplicados. Puedes continuar.",
+    "照片已處理，但找不到新的照片項目。":
+      "La foto se procesó, pero no se encontró el nuevo elemento."
+    ,
+    "結束": "Finalizar",
+    "按住查看原圖": "Mantener para ver el original",
+    "直方圖": "Histograma",
+    "雙擊重設": "Doble clic para restablecer"
   };
 
   const dictionaries = {

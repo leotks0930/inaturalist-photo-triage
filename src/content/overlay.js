@@ -1,11 +1,24 @@
 (() => {
-  const UI_VERSION = 12;
-  const CHANNEL = "inat-photo-triage-v8";
+  const UI_VERSION = 13;
+  const CHANNEL = "inat-photo-triage-v9";
   const MAX_GROUP_PHOTOS = 20;
   const DELETE_CONFIRM_WINDOW_MS = 3000;
   const CROP_JPEG_QUALITY = 0.98;
   const IMAGE_FILE_PATTERN =
     /\.(avif|bmp|cr2|cr3|dng|gif|heic|heif|jpe?g|nef|orf|png|rw2|tiff?|webp)$/i;
+  const COLOR_ADJUSTMENTS = [
+    { key: "exposure", label: "曝光", min: -2, max: 2, step: 0.05 },
+    { key: "contrast", label: "對比", min: -100, max: 100, step: 1 },
+    { key: "highlights", label: "亮部", min: -100, max: 100, step: 1 },
+    { key: "shadows", label: "陰影", min: -100, max: 100, step: 1 },
+    { key: "whites", label: "白色", min: -100, max: 100, step: 1 },
+    { key: "blacks", label: "黑色", min: -100, max: 100, step: 1 },
+    { key: "temperature", label: "色溫", min: -100, max: 100, step: 1 },
+    { key: "tint", label: "色調", min: -100, max: 100, step: 1 },
+    { key: "saturation", label: "飽和度", min: -100, max: 100, step: 1 },
+    { key: "vibrance", label: "鮮豔度", min: -100, max: 100, step: 1 },
+    { key: "hue", label: "色相", min: -180, max: 180, step: 1 }
+  ];
 
   function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
@@ -54,6 +67,7 @@
     localByPhotoId: new Map(),
     fileInputPurpose: null,
     crop: null,
+    color: null,
     session: null,
     currentIndex: 0,
     processedFileIds: new Set(),
@@ -275,12 +289,19 @@
       );
       state.snapshot = snapshot;
       matchLocalFilesToPhotos();
+      for (const mapping of snapshot.uploadedFileMappings || []) {
+        const entry = loaded[mapping.requestIndex];
+        if (entry) {
+          state.localByPhotoId.set(mapping.fileId, entry);
+        }
+      }
       state.busy = false;
       setActionBusy(false);
 
       if (!state.session || state.session.status === "complete") {
         startBatch();
       } else {
+        appendUnseenPhotosToSession(snapshot);
         repairCurrentIndex();
         render();
       }
@@ -438,6 +459,22 @@
         state.localByPhotoId.set(photo.fileId, candidates.shift());
       }
     }
+
+    const unmatchedPhotos = state.snapshot.photos.filter(
+      photo => !state.localByPhotoId.has(photo.fileId)
+    );
+    const matchedEntries = new Set(state.localByPhotoId.values());
+    const unmatchedEntries = state.localEntries.filter(
+      entry => !matchedEntries.has(entry)
+    );
+    if (
+      unmatchedEntries.length &&
+      unmatchedEntries.length === unmatchedPhotos.length
+    ) {
+      unmatchedPhotos.forEach((photo, index) => {
+        state.localByPhotoId.set(photo.fileId, unmatchedEntries[index]);
+      });
+    }
   }
 
   async function createHost() {
@@ -532,6 +569,11 @@
                 <button id="cropButton" type="button" data-command="crop" aria-label="裁切本機原圖" disabled>
                   <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M7 3v14a2 2 0 0 0 2 2h12M3 7h14a2 2 0 0 1 2 2v12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                <button id="colorButton" type="button" data-command="color" aria-label="調整顏色" disabled>
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M5 7h14M5 12h14M5 17h14M9 5v4M15 10v4M11 15v4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
                   </svg>
                 </button>
               </div>
@@ -662,7 +704,7 @@
               <div><strong id="deletedCount">0</strong><span>刪除</span></div>
             </div>
             <div class="summary-actions">
-              <button class="ghost-button" type="button" data-command="rescan">重新掃描</button>
+              <button class="ghost-button" type="button" data-command="close">結束</button>
               <button class="solid-button" id="nextBatchButton" type="button" data-command="next-batch">處理下一批</button>
             </div>
           </div>
@@ -696,6 +738,7 @@
       "zoomLabel",
       "zoomInstruction",
       "cropButton",
+      "colorButton",
       "localFileInput",
       "fileName",
       "captureTime",
@@ -799,6 +842,7 @@
       const snapshot = await bridgeRequest("snapshot");
       state.snapshot = snapshot;
       matchLocalFilesToPhotos();
+      appendUnseenPhotosToSession(snapshot);
 
       if (!snapshot?.photos?.length) {
         showUploadEmptyState();
@@ -849,6 +893,35 @@
     state.counts = { merged: 0, separated: 0, deleted: 0 };
     hideStateLayers();
     render();
+  }
+
+  function appendUnseenPhotosToSession(snapshot) {
+    if (
+      !state.session ||
+      state.session.status !== "active" ||
+      !snapshot?.photos?.length
+    ) {
+      return;
+    }
+    const existingIds = new Set(state.session.queue);
+    const slots = Math.max(
+      0,
+      state.settings.batchLimit - state.session.queue.length
+    );
+    if (!slots) {
+      return;
+    }
+    const unseen = snapshot.photos
+      .filter(
+        photo =>
+          !existingIds.has(photo.fileId) &&
+          !state.processedFileIds.has(photo.fileId)
+      )
+      .sort((a, b) => a.orderIndex - b.orderIndex)
+      .slice(0, slots);
+    if (unseen.length) {
+      state.session.queue.push(...unseen.map(photo => photo.fileId));
+    }
   }
 
   function currentPhoto() {
@@ -1005,6 +1078,8 @@
     elements.nextButton.disabled = state.busy;
     elements.cropButton.disabled =
       state.busy || !localEntry?.decodable;
+    elements.colorButton.disabled =
+      state.busy || !localEntry?.decodable;
     renderQueueStrip();
 
     elements.photoImage.classList.remove("is-ready");
@@ -1082,6 +1157,21 @@
         return;
       case "crop":
         openCropEditor();
+        return;
+      case "color":
+        openColorEditor();
+        return;
+      case "color-tab":
+        switchColorTab(element.dataset.colorTab);
+        return;
+      case "curve-channel":
+        switchCurveChannel(element.dataset.channel);
+        return;
+      case "reset-color":
+        resetColorAdjustments();
+        return;
+      case "confirm-color":
+        await applyColorAdjustments();
         return;
       case "reset-crop":
         resetCropSelection();
@@ -1205,6 +1295,9 @@
     await refreshSnapshotForNavigation();
 
     const nextIndex = state.currentIndex + direction;
+    if (direction > 0) {
+      markFirstPhotoReviewed();
+    }
     if (nextIndex < 0 || nextIndex >= state.session.queue.length) {
       if (direction > 0 && nextIndex >= state.session.queue.length) {
         showSummary();
@@ -1212,9 +1305,6 @@
       return;
     }
 
-    if (direction > 0) {
-      markFirstPhotoReviewed();
-    }
     state.currentIndex = nextIndex;
     render();
   }
@@ -1621,6 +1711,7 @@
       elements.deleteButton,
       elements.groupsButton,
       elements.cropButton,
+      elements.colorButton,
       elements.uploadSourceButton,
       elements.loadSourceButton,
       elements.previousButton,
@@ -1664,6 +1755,9 @@
     } else if (state.modal.type === "crop") {
       elements.modalCard.classList.add("crop-modal-card");
       renderCropModal(state.modal.photo, state.modal.entry);
+    } else if (state.modal.type === "color") {
+      elements.modalCard.classList.add("color-modal-card");
+      renderColorModal(state.modal.photo, state.modal.entry);
     }
     I18N.translateDom(elements.modalCard);
   }
@@ -1998,24 +2092,51 @@
     const baseName = crop.entry.file.name.replace(/\.[^.]+$/, "");
     const timestamp = Date.now();
     const fileName = `${baseName}-crop-${timestamp}.${extension}`;
-    const originalEntry = state.localByPhotoId.get(crop.photo.fileId) || null;
-    const originalFileId = crop.photo.fileId;
-    const croppedFile = new File([blob], fileName, {
+    await replaceCurrentPhotoWithBlob({
+      photo: crop.photo,
+      blob,
+      fileName,
       type: outputType,
-      lastModified: Date.now()
-    });
-    const croppedUrl = URL.createObjectURL(blob);
-    const croppedEntry = {
-      file: croppedFile,
-      url: croppedUrl,
       width: outputWidth,
       height: outputHeight,
+      progressMessage: "正在套用裁切…",
+      successMessage: "已套用裁切，可以繼續整理。"
+    });
+  }
+
+  async function replaceCurrentPhotoWithBlob({
+    photo,
+    blob,
+    fileName,
+    type,
+    width,
+    height,
+    progressMessage,
+    successMessage
+  }) {
+    if (!photo || state.busy) {
+      return false;
+    }
+
+    const originalEntry = state.localByPhotoId.get(photo.fileId) || null;
+    const originalFileId = photo.fileId;
+    const file = new File([blob], fileName, {
+      type,
+      lastModified: Date.now()
+    });
+    const previewUrl = URL.createObjectURL(blob);
+    const newEntry = {
+      file,
+      url: previewUrl,
+      width,
+      height,
       decodable: true
     };
 
-    state.localByPhotoId.set(originalFileId, croppedEntry);
+    state.localByPhotoId.set(originalFileId, newEntry);
     state.modal = null;
     state.crop = null;
+    state.color = null;
     renderModal();
     state.zoom.photoId = null;
     resetZoom();
@@ -2023,23 +2144,23 @@
 
     state.busy = true;
     setActionBusy(true);
-    showToast("正在套用裁切…");
+    showToast(progressMessage);
 
     try {
       const arrayBuffer = await blob.arrayBuffer();
       const snapshot = await bridgeRequest(
         "addCroppedPhoto",
         {
-          fileId: crop.photo.fileId,
+          fileId: originalFileId,
           arrayBuffer,
           name: fileName,
-          type: outputType
+          type
         },
         125000
       );
       const uploadedFileId = snapshot.uploadedFileId;
       if (!uploadedFileId) {
-        throw new Error("裁切照片已處理，但找不到新的照片項目。");
+        throw new Error("照片已處理，但找不到新的照片項目。");
       }
 
       if (state.session) {
@@ -2050,15 +2171,16 @@
           state.processedFileIds.add(uploadedFileId);
         }
       }
-      appendLocalEntries([croppedEntry]);
+      appendLocalEntries([newEntry]);
       state.snapshot = snapshot;
       matchLocalFilesToPhotos();
       render();
-      showToast("已套用裁切，可以繼續整理。");
+      showToast(successMessage);
+      return true;
     } catch (error) {
-      URL.revokeObjectURL(croppedUrl);
+      URL.revokeObjectURL(previewUrl);
       state.localEntries = state.localEntries.filter(
-        entry => entry !== croppedEntry
+        entry => entry !== newEntry
       );
       if (originalEntry) {
         state.localByPhotoId.set(originalFileId, originalEntry);
@@ -2070,12 +2192,992 @@
         error instanceof Error ? error.message : String(error),
         "error"
       );
+      return false;
     } finally {
       state.busy = false;
       elements.shell.classList.remove("is-busy");
       if (currentPhoto() && !elements.triageMain.hidden) {
         render();
       }
+    }
+  }
+
+  function openColorEditor() {
+    const photo = currentPhoto();
+    const entry = photo ? state.localByPhotoId.get(photo.fileId) : null;
+    if (!photo || !entry?.decodable) {
+      showToast("請先載入這張照片的本機原圖。", "error");
+      return;
+    }
+    state.color = null;
+    state.modal = { type: "color", photo, entry };
+    renderModal();
+  }
+
+  function renderColorModal(photo, entry) {
+    const adjustments = {};
+    for (const adjustment of COLOR_ADJUSTMENTS) {
+      adjustments[adjustment.key] = 0;
+    }
+
+    const title = document.createElement("h2");
+    title.textContent = "調整顏色";
+    const copy = document.createElement("p");
+    copy.className = "modal-copy";
+    copy.textContent = I18N.format(
+      "使用本機原檔即時調整；套用後會替換目前照片，本機原檔不變。",
+      {}
+    );
+
+    const layout = document.createElement("div");
+    layout.className = "color-editor-layout";
+
+    const previewPane = document.createElement("section");
+    previewPane.className = "color-preview-pane";
+    const previewCanvas = document.createElement("canvas");
+    previewCanvas.className = "color-preview-canvas";
+    const histogram = document.createElement("canvas");
+    histogram.className = "color-mini-histogram";
+    histogram.width = 512;
+    histogram.height = 180;
+    const compareButton = document.createElement("button");
+    compareButton.type = "button";
+    compareButton.className = "color-compare-button";
+    compareButton.textContent = I18N.t("按住查看原圖");
+    const histogramCard = document.createElement("div");
+    histogramCard.className = "color-histogram-card";
+    const histogramLabel = document.createElement("span");
+    histogramLabel.textContent = I18N.t("直方圖");
+    histogramCard.append(histogramLabel, histogram);
+    previewPane.append(previewCanvas, compareButton, histogramCard);
+
+    const controls = document.createElement("aside");
+    controls.className = "color-controls";
+
+    const tabs = document.createElement("div");
+    tabs.className = "color-tabs";
+    for (const [tab, label] of [
+      ["basic", "基本"],
+      ["curves", "曲線"]
+    ]) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.command = "color-tab";
+      button.dataset.colorTab = tab;
+      button.className = `color-tab${tab === "basic" ? " is-active" : ""}`;
+      button.textContent = I18N.t(label);
+      tabs.appendChild(button);
+    }
+    controls.appendChild(tabs);
+
+    const basicPanel = document.createElement("div");
+    basicPanel.className = "color-panel color-panel-basic";
+    addColorGroup(basicPanel, "光線", COLOR_ADJUSTMENTS.slice(0, 6), adjustments);
+    addColorGroup(basicPanel, "顏色", COLOR_ADJUSTMENTS.slice(6), adjustments);
+    controls.appendChild(basicPanel);
+
+    const curvePanel = document.createElement("div");
+    curvePanel.className = "color-panel color-panel-curves";
+    curvePanel.hidden = true;
+
+    const channelButtons = document.createElement("div");
+    channelButtons.className = "curve-channel-buttons";
+    for (const channel of [
+      ["rgb", "RGB"],
+      ["r", "R"],
+      ["g", "G"],
+      ["b", "B"]
+    ]) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.command = "curve-channel";
+      button.dataset.channel = channel[0];
+      button.className = `curve-channel${
+        channel[0] === "rgb" ? " is-active" : ""
+      }`;
+      button.textContent = channel[1];
+      channelButtons.appendChild(button);
+    }
+    curvePanel.appendChild(channelButtons);
+
+    const curveCanvas = document.createElement("canvas");
+    curveCanvas.className = "color-curve-canvas";
+    curveCanvas.width = 840;
+    curveCanvas.height = 520;
+    curvePanel.appendChild(curveCanvas);
+
+    const curveHint = document.createElement("p");
+    curveHint.className = "curve-hint";
+    curveHint.textContent =
+      "點擊新增控制點，拖曳調整曲線，右鍵刪除控制點。";
+    curvePanel.appendChild(curveHint);
+    controls.appendChild(curvePanel);
+
+    layout.append(previewPane, controls);
+
+    const actions = document.createElement("div");
+    actions.className = "modal-actions color-actions";
+    const reset = document.createElement("button");
+    reset.type = "button";
+    reset.className = "ghost-button";
+    reset.dataset.command = "reset-color";
+    reset.textContent = "重設全部";
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.className = "ghost-button";
+    cancel.dataset.command = "close-modal";
+    cancel.textContent = "取消";
+    const apply = document.createElement("button");
+    apply.type = "button";
+    apply.className = "solid-button";
+    apply.dataset.command = "confirm-color";
+    apply.textContent = "套用調色";
+
+    const actionRight = document.createElement("div");
+    actionRight.className = "color-action-right";
+    actionRight.append(cancel, apply);
+    actions.append(reset, actionRight);
+
+    elements.modalCard.append(title, copy, layout, actions);
+
+    const linear = () => [
+      [0, 0],
+      [1, 1]
+    ];
+    state.color = {
+      photo,
+      entry,
+      image: null,
+      previewCanvas,
+      previewContext: null,
+      histogramCanvas: histogram,
+      curveCanvas,
+      adjustments,
+      curves: {
+        rgb: linear(),
+        r: linear(),
+        g: linear(),
+        b: linear()
+      },
+      activeChannel: "rgb",
+      activeTab: "basic",
+      dragPoint: null,
+      basePixels: null,
+      previewWidth: 0,
+      previewHeight: 0,
+      histograms: null,
+      renderedImageData: null,
+      renderTimer: null,
+      applying: false
+    };
+
+    const image = new Image();
+    image.decoding = "async";
+    image.onload = () => initializeColorEditor(image);
+    image.onerror = () =>
+      showToast("無法載入本機原圖。", "error");
+    image.src = entry.url;
+
+    attachCurveEvents(curveCanvas);
+    compareButton.addEventListener("pointerdown", event => {
+      const activeColor = state.color;
+      if (
+        !activeColor?.basePixels ||
+        !activeColor.previewContext
+      ) {
+        return;
+      }
+      event.preventDefault();
+      activeColor.previewContext.putImageData(
+        new ImageData(
+          new Uint8ClampedArray(activeColor.basePixels),
+          activeColor.previewWidth,
+          activeColor.previewHeight
+        ),
+        0,
+        0
+      );
+      compareButton.classList.add("is-pressed");
+    });
+    const restoreAdjustedPreview = () => {
+      const activeColor = state.color;
+      if (
+        activeColor?.renderedImageData &&
+        activeColor.previewContext
+      ) {
+        activeColor.previewContext.putImageData(
+          activeColor.renderedImageData,
+          0,
+          0
+        );
+      }
+      compareButton.classList.remove("is-pressed");
+    };
+    compareButton.addEventListener("pointerup", restoreAdjustedPreview);
+    compareButton.addEventListener("pointercancel", restoreAdjustedPreview);
+    compareButton.addEventListener("pointerleave", restoreAdjustedPreview);
+    I18N.translateDom(elements.modalCard);
+  }
+
+  function addColorGroup(panel, headingText, adjustments, values) {
+    const group = document.createElement("div");
+    group.className = "color-adjustment-group";
+    const heading = document.createElement("h3");
+    heading.textContent = I18N.t(headingText);
+    group.appendChild(heading);
+
+    for (const adjustment of adjustments) {
+      const row = document.createElement("label");
+      row.className = "color-slider-row";
+      const top = document.createElement("span");
+      top.className = "color-slider-top";
+      const name = document.createElement("strong");
+      name.textContent = I18N.t(adjustment.label);
+      const value = document.createElement("span");
+      value.className = "color-slider-value";
+      value.textContent = formatColorValue(
+        adjustment,
+        values[adjustment.key]
+      );
+      top.append(name, value);
+
+      const range = document.createElement("input");
+      range.type = "range";
+      range.min = String(adjustment.min);
+      range.max = String(adjustment.max);
+      range.step = String(adjustment.step);
+      range.value = String(values[adjustment.key]);
+      range.dataset.adjustment = adjustment.key;
+      range.title = I18N.t("雙擊重設");
+      range.addEventListener("input", () => {
+        if (!state.color) {
+          return;
+        }
+        values[adjustment.key] = Number(range.value);
+        value.textContent = formatColorValue(
+          adjustment,
+          values[adjustment.key]
+        );
+        scheduleColorPreview();
+      });
+      range.addEventListener("dblclick", () => {
+        if (!state.color) {
+          return;
+        }
+        values[adjustment.key] = 0;
+        range.value = "0";
+        value.textContent = formatColorValue(adjustment, 0);
+        scheduleColorPreview();
+      });
+
+      row.append(top, range);
+      group.appendChild(row);
+    }
+    panel.appendChild(group);
+  }
+
+  function formatColorValue(adjustment, value) {
+    if (adjustment.key === "exposure") {
+      return `${value >= 0 ? "+" : ""}${Number(value).toFixed(2)} EV`;
+    }
+    return `${value > 0 ? "+" : ""}${Math.round(value)}`;
+  }
+
+  function initializeColorEditor(image) {
+    const color = state.color;
+    if (!color || color.image !== null) {
+      return;
+    }
+
+    const maxWidth = 860;
+    const maxHeight = 580;
+    const scale = Math.min(
+      1,
+      maxWidth / image.naturalWidth,
+      maxHeight / image.naturalHeight
+    );
+    const width = Math.max(1, Math.round(image.naturalWidth * scale));
+    const height = Math.max(1, Math.round(image.naturalHeight * scale));
+    color.previewCanvas.width = width;
+    color.previewCanvas.height = height;
+    const context = color.previewCanvas.getContext("2d", {
+      willReadFrequently: true
+    });
+    context.drawImage(image, 0, 0, width, height);
+    const imageData = context.getImageData(0, 0, width, height);
+
+    color.image = image;
+    color.previewContext = context;
+    color.previewWidth = width;
+    color.previewHeight = height;
+    color.basePixels = new Uint8ClampedArray(imageData.data);
+    scheduleColorPreview();
+  }
+
+  function switchColorTab(tab) {
+    const color = state.color;
+    if (!color || !["basic", "curves"].includes(tab)) {
+      return;
+    }
+    color.activeTab = tab;
+    for (const button of elements.modalCard.querySelectorAll(
+      "[data-command='color-tab']"
+    )) {
+      button.classList.toggle("is-active", button.dataset.colorTab === tab);
+    }
+    const basic = elements.modalCard.querySelector(".color-panel-basic");
+    const curves = elements.modalCard.querySelector(".color-panel-curves");
+    if (basic) {
+      basic.hidden = tab !== "basic";
+    }
+    if (curves) {
+      curves.hidden = tab !== "curves";
+    }
+    if (tab === "curves") {
+      drawColorCurve();
+    }
+  }
+
+  function switchCurveChannel(channel) {
+    const color = state.color;
+    if (!color || !["rgb", "r", "g", "b"].includes(channel)) {
+      return;
+    }
+    color.activeChannel = channel;
+    for (const button of elements.modalCard.querySelectorAll(
+      "[data-command='curve-channel']"
+    )) {
+      button.classList.toggle(
+        "is-active",
+        button.dataset.channel === channel
+      );
+    }
+    drawColorCurve();
+  }
+
+  function resetColorAdjustments() {
+    const color = state.color;
+    if (!color) {
+      return;
+    }
+    for (const adjustment of COLOR_ADJUSTMENTS) {
+      color.adjustments[adjustment.key] = 0;
+    }
+    for (const channel of ["rgb", "r", "g", "b"]) {
+      color.curves[channel] = [
+        [0, 0],
+        [1, 1]
+      ];
+    }
+    for (const input of elements.modalCard.querySelectorAll(
+      "[data-adjustment]"
+    )) {
+      input.value = "0";
+      const adjustment = COLOR_ADJUSTMENTS.find(
+        item => item.key === input.dataset.adjustment
+      );
+      const label = input
+        .closest(".color-slider-row")
+        ?.querySelector(".color-slider-value");
+      if (adjustment && label) {
+        label.textContent = formatColorValue(adjustment, 0);
+      }
+    }
+    drawColorCurve();
+    scheduleColorPreview();
+  }
+
+  function attachCurveEvents(canvas) {
+    canvas.addEventListener("pointerdown", event => {
+      const color = state.color;
+      if (!color?.image || event.button !== 0) {
+        return;
+      }
+      const point = eventCurvePoint(event, canvas);
+      const points = color.curves[color.activeChannel];
+      const nearest = nearestCurvePoint(points, point);
+      if (nearest) {
+        color.dragPoint = nearest.index;
+      } else {
+        const index = points.findIndex(item => item[0] > point.x);
+        const insertAt = index === -1 ? points.length - 1 : index;
+        points.splice(insertAt, 0, [point.x, point.y]);
+        color.dragPoint = insertAt;
+      }
+      canvas.setPointerCapture(event.pointerId);
+      color.dragPointerId = event.pointerId;
+      updateDraggedCurvePoint(point, points, color.dragPoint);
+      event.preventDefault();
+    });
+
+    canvas.addEventListener("pointermove", event => {
+      const color = state.color;
+      if (
+        !color ||
+        color.dragPoint === null ||
+        color.dragPointerId !== event.pointerId
+      ) {
+        return;
+      }
+      const point = eventCurvePoint(event, canvas);
+      updateDraggedCurvePoint(
+        point,
+        color.curves[color.activeChannel],
+        color.dragPoint
+      );
+      event.preventDefault();
+    });
+
+    const end = event => {
+      const color = state.color;
+      if (!color || color.dragPointerId !== event.pointerId) {
+        return;
+      }
+      color.dragPoint = null;
+      color.dragPointerId = null;
+      if (canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+      }
+    };
+    canvas.addEventListener("pointerup", end);
+    canvas.addEventListener("pointercancel", end);
+
+    canvas.addEventListener("contextmenu", event => {
+      const color = state.color;
+      if (!color?.image) {
+        return;
+      }
+      event.preventDefault();
+      const point = eventCurvePoint(event, canvas);
+      const points = color.curves[color.activeChannel];
+      const nearest = nearestCurvePoint(points, point);
+      if (
+        nearest &&
+        nearest.index !== 0 &&
+        nearest.index !== points.length - 1
+      ) {
+        points.splice(nearest.index, 1);
+        drawColorCurve();
+        scheduleColorPreview();
+      }
+    });
+  }
+
+  function eventCurvePoint(event, canvas) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: clamp((event.clientX - rect.left) / rect.width, 0, 1),
+      y: clamp(1 - (event.clientY - rect.top) / rect.height, 0, 1)
+    };
+  }
+
+  function nearestCurvePoint(points, point) {
+    let best = null;
+    let bestDistance = Infinity;
+    points.forEach((item, index) => {
+      const distance = Math.hypot(item[0] - point.x, item[1] - point.y);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        best = { index, distance };
+      }
+    });
+    return bestDistance <= 0.045 ? best : null;
+  }
+
+  function updateDraggedCurvePoint(point, points, index) {
+    if (!points[index]) {
+      return;
+    }
+    const isFirst = index === 0;
+    const isLast = index === points.length - 1;
+    let x = point.x;
+    if (isFirst) {
+      x = 0;
+    } else if (isLast) {
+      x = 1;
+    } else {
+      x = clamp(
+        x,
+        points[index - 1][0] + 0.005,
+        points[index + 1][0] - 0.005
+      );
+    }
+    points[index] = [x, clamp(point.y, 0, 1)];
+    drawColorCurve();
+    scheduleColorPreview();
+  }
+
+  function scheduleColorPreview() {
+    const color = state.color;
+    if (!color?.basePixels) {
+      return;
+    }
+    window.clearTimeout(color.renderTimer);
+    color.renderTimer = window.setTimeout(renderColorPreview, 35);
+  }
+
+  function renderColorPreview() {
+    const color = state.color;
+    if (!color?.basePixels || !color.previewContext) {
+      return;
+    }
+    const imageData = new ImageData(
+      new Uint8ClampedArray(color.basePixels),
+      color.previewWidth,
+      color.previewHeight
+    );
+    const histograms = applyColorPixels(
+      imageData,
+      color.adjustments,
+      color.curves,
+      true
+    );
+    color.previewContext.putImageData(imageData, 0, 0);
+    color.renderedImageData = imageData;
+    color.histograms = histograms;
+    drawMiniHistogram();
+    if (color.activeTab === "curves") {
+      drawColorCurve();
+    }
+  }
+
+  function buildCurveLut(points) {
+    const sorted = points
+      .map(point => [point[0], point[1]])
+      .sort((a, b) => a[0] - b[0]);
+    if (sorted.length < 2) {
+      return new Uint8Array(
+        Array.from({ length: 256 }, (_, index) => index)
+      );
+    }
+    if (sorted[0][0] > 0) {
+      sorted.unshift([0, sorted[0][1]]);
+    }
+    if (sorted[sorted.length - 1][0] < 1) {
+      sorted.push([1, sorted[sorted.length - 1][1]]);
+    }
+
+    const n = sorted.length;
+    const h = new Array(n - 1);
+    const delta = new Array(n - 1);
+    for (let i = 0; i < n - 1; i += 1) {
+      h[i] = Math.max(0.000001, sorted[i + 1][0] - sorted[i][0]);
+      delta[i] = (sorted[i + 1][1] - sorted[i][1]) / h[i];
+    }
+    const slopes = new Array(n).fill(0);
+    slopes[0] = delta[0] || 0;
+    slopes[n - 1] = delta[n - 2] || 0;
+    for (let i = 1; i < n - 1; i += 1) {
+      if (delta[i - 1] * delta[i] <= 0) {
+        slopes[i] = 0;
+      } else {
+        const w1 = 2 * h[i] + h[i - 1];
+        const w2 = h[i] + 2 * h[i - 1];
+        slopes[i] =
+          (w1 + w2) /
+          (w1 / delta[i - 1] + w2 / delta[i]);
+      }
+    }
+
+    const lut = new Uint8Array(256);
+    let segment = 0;
+    for (let x = 0; x < 256; x += 1) {
+      const nx = x / 255;
+      while (
+        segment < n - 2 &&
+        nx > sorted[segment + 1][0]
+      ) {
+        segment += 1;
+      }
+      const x0 = sorted[segment][0];
+      const x1 = sorted[segment + 1][0];
+      const t = (nx - x0) / Math.max(0.000001, x1 - x0);
+      const t2 = t * t;
+      const t3 = t2 * t;
+      const y =
+        (2 * t3 - 3 * t2 + 1) * sorted[segment][1] +
+        (t3 - 2 * t2 + t) * h[segment] * slopes[segment] +
+        (-2 * t3 + 3 * t2) * sorted[segment + 1][1] +
+        (t3 - t2) * h[segment] * slopes[segment + 1];
+      lut[x] = Math.round(clamp(y, 0, 1) * 255);
+    }
+    return lut;
+  }
+
+  function applyColorPixels(imageData, adjustments, curves, wantHistogram) {
+    const data = imageData.data;
+    const rgbLut = buildCurveLut(curves.rgb);
+    const rLut = buildCurveLut(curves.r);
+    const gLut = buildCurveLut(curves.g);
+    const bLut = buildCurveLut(curves.b);
+    const exposure = 2 ** Number(adjustments.exposure || 0);
+    const contrast = 1 + Number(adjustments.contrast || 0) / 100;
+    const highlights = Number(adjustments.highlights || 0) / 100;
+    const shadows = Number(adjustments.shadows || 0) / 100;
+    const whites = Number(adjustments.whites || 0) / 100;
+    const blacks = Number(adjustments.blacks || 0) / 100;
+    const temperature = Number(adjustments.temperature || 0) / 100;
+    const tint = Number(adjustments.tint || 0) / 100;
+    const saturation = 1 + Number(adjustments.saturation || 0) / 100;
+    const vibrance = Number(adjustments.vibrance || 0) / 100;
+    const hueAngle =
+      (Number(adjustments.hue || 0) * Math.PI) / 180;
+    const cos = Math.cos(hueAngle);
+    const sin = Math.sin(hueAngle);
+    const hueMatrix = [
+      0.213 + cos * 0.787 - sin * 0.213,
+      0.715 - cos * 0.715 - sin * 0.715,
+      0.072 - cos * 0.072 + sin * 0.928,
+      0.213 - cos * 0.213 + sin * 0.143,
+      0.715 + cos * 0.285 + sin * 0.14,
+      0.072 - cos * 0.072 - sin * 0.283,
+      0.213 - cos * 0.213 - sin * 0.787,
+      0.715 - cos * 0.715 + sin * 0.715,
+      0.072 + cos * 0.928 + sin * 0.072
+    ];
+    const histogram = wantHistogram
+      ? {
+          rgb: new Uint32Array(256),
+          r: new Uint32Array(256),
+          g: new Uint32Array(256),
+          b: new Uint32Array(256)
+        }
+      : null;
+
+    for (let index = 0; index < data.length; index += 4) {
+      let r = data[index] / 255;
+      let g = data[index + 1] / 255;
+      let b = data[index + 2] / 255;
+
+      r *= exposure;
+      g *= exposure;
+      b *= exposure;
+
+      r *= 1 + temperature * 0.18;
+      b *= 1 - temperature * 0.18;
+      g *= 1 - tint * 0.12;
+      r *= 1 + tint * 0.06;
+      b *= 1 + tint * 0.06;
+
+      r = (r - 0.5) * contrast + 0.5;
+      g = (g - 0.5) * contrast + 0.5;
+      b = (b - 0.5) * contrast + 0.5;
+
+      let luminance = colorLuminance(r, g, b);
+      if (shadows || highlights) {
+        const shadowWeight = (1 - clamp(luminance, 0, 1)) ** 2;
+        const highlightWeight = clamp(luminance, 0, 1) ** 2;
+        const shift =
+          shadows * shadowWeight * 0.3 +
+          highlights * highlightWeight * 0.3;
+        r += shift;
+        g += shift;
+        b += shift;
+      }
+      if (whites || blacks) {
+        luminance = colorLuminance(r, g, b);
+        const whiteWeight = smoothstep(0.5, 1, luminance);
+        const blackWeight = 1 - smoothstep(0, 0.5, luminance);
+        const shift =
+          whites * whiteWeight * 0.25 +
+          blacks * blackWeight * 0.25;
+        r += shift;
+        g += shift;
+        b += shift;
+      }
+
+      luminance = colorLuminance(r, g, b);
+      r = luminance + (r - luminance) * saturation;
+      g = luminance + (g - luminance) * saturation;
+      b = luminance + (b - luminance) * saturation;
+
+      if (vibrance) {
+        const maxChannel = Math.max(r, g, b);
+        const minChannel = Math.min(r, g, b);
+        const amount = maxChannel - minChannel;
+        const factor = 1 + vibrance * (1 - clamp(amount, 0, 1));
+        r = luminance + (r - luminance) * factor;
+        g = luminance + (g - luminance) * factor;
+        b = luminance + (b - luminance) * factor;
+      }
+
+      if (hueAngle) {
+        const hr =
+          hueMatrix[0] * r +
+          hueMatrix[1] * g +
+          hueMatrix[2] * b;
+        const hg =
+          hueMatrix[3] * r +
+          hueMatrix[4] * g +
+          hueMatrix[5] * b;
+        const hb =
+          hueMatrix[6] * r +
+          hueMatrix[7] * g +
+          hueMatrix[8] * b;
+        r = hr;
+        g = hg;
+        b = hb;
+      }
+
+      let red = Math.round(clamp(r * 255, 0, 255));
+      let green = Math.round(clamp(g * 255, 0, 255));
+      let blue = Math.round(clamp(b * 255, 0, 255));
+      red = rgbLut[rLut[red]];
+      green = rgbLut[gLut[green]];
+      blue = rgbLut[bLut[blue]];
+
+      data[index] = red;
+      data[index + 1] = green;
+      data[index + 2] = blue;
+
+      if (histogram) {
+        histogram.r[red] += 1;
+        histogram.g[green] += 1;
+        histogram.b[blue] += 1;
+        histogram.rgb[
+          Math.round(
+            colorLuminance(red / 255, green / 255, blue / 255) * 255
+          )
+        ] += 1;
+      }
+    }
+    return histogram;
+  }
+
+  function colorLuminance(r, g, b) {
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
+
+  function smoothstep(edge0, edge1, value) {
+    const t = clamp((value - edge0) / (edge1 - edge0), 0, 1);
+    return t * t * (3 - 2 * t);
+  }
+
+  function drawMiniHistogram() {
+    const color = state.color;
+    if (!color?.histograms) {
+      return;
+    }
+    const canvas = color.histogramCanvas;
+    const context = canvas.getContext("2d");
+    const width = canvas.width;
+    const height = canvas.height;
+    context.clearRect(0, 0, width, height);
+    context.fillStyle = "rgba(18, 26, 21, 0.9)";
+    context.fillRect(0, 0, width, height);
+    drawHistogramSeries(
+      context,
+      color.histograms.r,
+      width,
+      height,
+      "rgba(225, 95, 83, 0.55)"
+    );
+    drawHistogramSeries(
+      context,
+      color.histograms.g,
+      width,
+      height,
+      "rgba(105, 185, 115, 0.5)"
+    );
+    drawHistogramSeries(
+      context,
+      color.histograms.b,
+      width,
+      height,
+      "rgba(93, 140, 220, 0.55)"
+    );
+  }
+
+  function drawHistogramSeries(
+    context,
+    histogram,
+    width,
+    height,
+    fillStyle
+  ) {
+    const max = Math.max(1, ...histogram);
+    context.beginPath();
+    context.moveTo(0, height);
+    for (let index = 0; index < histogram.length; index += 1) {
+      const x = (index / 255) * width;
+      const normalized = Math.sqrt(histogram[index] / max);
+      context.lineTo(x, height - normalized * (height - 4));
+    }
+    context.lineTo(width, height);
+    context.closePath();
+    context.fillStyle = fillStyle;
+    context.fill();
+  }
+
+  function drawColorCurve() {
+    const color = state.color;
+    if (!color?.curveCanvas) {
+      return;
+    }
+    const canvas = color.curveCanvas;
+    const context = canvas.getContext("2d");
+    const width = 420;
+    const height = 260;
+    context.setTransform(2, 0, 0, 2, 0, 0);
+    context.clearRect(0, 0, width, height);
+    context.fillStyle = "#121a15";
+    context.fillRect(0, 0, width, height);
+
+    if (color.histograms) {
+      const histogram =
+        color.histograms[color.activeChannel] ||
+        color.histograms.rgb;
+      const max = Math.max(1, ...histogram);
+      context.beginPath();
+      context.moveTo(0, height);
+      for (let index = 0; index < histogram.length; index += 1) {
+        const x = (index / 255) * width;
+        const normalized = Math.sqrt(histogram[index] / max);
+        context.lineTo(x, height - normalized * (height - 8));
+      }
+      context.lineTo(width, height);
+      context.closePath();
+      context.fillStyle = "rgba(255, 253, 247, 0.12)";
+      context.fill();
+    }
+
+    context.strokeStyle = "rgba(255, 255, 255, 0.12)";
+    context.lineWidth = 1;
+    for (let i = 1; i < 4; i += 1) {
+      const x = (width / 4) * i;
+      const y = (height / 4) * i;
+      context.beginPath();
+      context.moveTo(x, 0);
+      context.lineTo(x, height);
+      context.moveTo(0, y);
+      context.lineTo(width, y);
+      context.stroke();
+    }
+    context.strokeStyle = "rgba(255, 255, 255, 0.22)";
+    context.beginPath();
+    context.moveTo(0, height);
+    context.lineTo(width, 0);
+    context.stroke();
+
+    const channelColors = {
+      rgb: "#fffdf7",
+      r: "#ff7468",
+      g: "#72d27f",
+      b: "#6d9fff"
+    };
+    const points = color.curves[color.activeChannel];
+    const lut = buildCurveLut(points);
+    context.strokeStyle = channelColors[color.activeChannel];
+    context.lineWidth = 2;
+    context.beginPath();
+    for (let index = 0; index < lut.length; index += 1) {
+      const x = (index / 255) * width;
+      const y = height - (lut[index] / 255) * height;
+      if (index === 0) {
+        context.moveTo(x, y);
+      } else {
+        context.lineTo(x, y);
+      }
+    }
+    context.stroke();
+
+    context.fillStyle = channelColors[color.activeChannel];
+    for (const point of points) {
+      context.beginPath();
+      context.arc(
+        point[0] * width,
+        height - point[1] * height,
+        5,
+        0,
+        Math.PI * 2
+      );
+      context.fill();
+      context.strokeStyle = "rgba(0, 0, 0, 0.68)";
+      context.lineWidth = 2;
+      context.stroke();
+    }
+  }
+
+  async function applyColorAdjustments() {
+    const color = state.color;
+    if (!color?.image || color.applying) {
+      return;
+    }
+    const applyButton = elements.modalCard.querySelector(
+      '[data-command="confirm-color"]'
+    );
+    if (applyButton) {
+      applyButton.disabled = true;
+      applyButton.textContent = I18N.t("正在輸出調色…");
+    }
+    color.applying = true;
+
+    try {
+      const image = color.image;
+      let width = image.naturalWidth;
+      let height = image.naturalHeight;
+      const maxDimension = 16384;
+      const scale = Math.min(
+        1,
+        maxDimension / Math.max(width, height)
+      );
+      width = Math.max(1, Math.round(width * scale));
+      height = Math.max(1, Math.round(height * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext("2d", {
+        willReadFrequently: true
+      });
+      context.imageSmoothingEnabled = true;
+      context.imageSmoothingQuality = "high";
+      context.drawImage(image, 0, 0, width, height);
+      const imageData = context.getImageData(0, 0, width, height);
+      applyColorPixels(
+        imageData,
+        color.adjustments,
+        color.curves,
+        false
+      );
+      context.putImageData(imageData, 0, 0);
+
+      const type =
+        color.entry.file.type === "image/png"
+          ? "image/png"
+          : "image/jpeg";
+      const blob = await new Promise(resolve =>
+        canvas.toBlob(
+          resolve,
+          type,
+          type === "image/jpeg" ? CROP_JPEG_QUALITY : undefined
+        )
+      );
+      if (!blob) {
+        throw new Error("無法產生調色照片。");
+      }
+      const extension = type === "image/png" ? "png" : "jpg";
+      const baseName = color.entry.file.name.replace(/\.[^.]+$/, "");
+      const fileName = `${baseName}-color-${Date.now()}.${extension}`;
+      await replaceCurrentPhotoWithBlob({
+        photo: color.photo,
+        blob,
+        fileName,
+        type,
+        width,
+        height,
+        progressMessage: "正在套用調色…",
+        successMessage: "已套用調色，可以繼續整理。"
+      });
+    } catch (error) {
+      if (applyButton) {
+        applyButton.disabled = false;
+        applyButton.textContent = I18N.t("套用調色");
+      }
+      color.applying = false;
+      showToast(
+        error instanceof Error ? error.message : String(error),
+        "error"
+      );
     }
   }
 

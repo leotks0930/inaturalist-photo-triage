@@ -1,6 +1,6 @@
 (() => {
-  const CHANNEL = "inat-photo-triage-v8";
-  const BRIDGE_VERSION = 8;
+  const CHANNEL = "inat-photo-triage-v9";
+  const BRIDGE_VERSION = 9;
   const MAX_GROUP_PHOTOS = 20;
 
   if (window.__INAT_REVIEW_BRIDGE__?.version === BRIDGE_VERSION) {
@@ -443,6 +443,7 @@
     });
 
     const before = snapshot();
+    const beforeIds = new Set(before.photos.map(photo => photo.fileId));
     const beforeCounts = countPhotoNames(before.photos);
     const beforeFailedNames = new Set(
       before.photos
@@ -484,7 +485,32 @@
     if (!allUploaded) {
       throw new Error("照片上傳尚未完成，請稍後重新掃描。");
     }
-    return latest;
+
+    const remainingNewPhotos = latest.photos
+      .filter(photo => !beforeIds.has(photo.fileId))
+      .sort((a, b) => a.orderIndex - b.orderIndex);
+    const uploadedFileMappings = files
+      .map((file, requestIndex) => {
+        let photoIndex = remainingNewPhotos.findIndex(
+          photo => photo.name === file.name
+        );
+        if (photoIndex < 0 && remainingNewPhotos.length) {
+          photoIndex = 0;
+        }
+        if (photoIndex < 0) {
+          return null;
+        }
+        const [photo] = remainingNewPhotos.splice(photoIndex, 1);
+        return {
+          requestIndex,
+          fileId: photo.fileId,
+          cardId: photo.cardId,
+          name: photo.name
+        };
+      })
+      .filter(Boolean);
+
+    return { ...latest, uploadedFileMappings };
   }
 
   function countPhotoNames(photos, uploadedOnly = false) {
