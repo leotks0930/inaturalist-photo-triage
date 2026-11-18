@@ -4,6 +4,8 @@
 
 繁體中文 | [English](README.en.md)
 
+[下載最新版本](https://github.com/leotks0930/inaturalist-photo-triage/releases/latest)
+
 完整安裝與首次使用步驟請見 [`INSTALL.md`](INSTALL.md)。
 
 ## 功能

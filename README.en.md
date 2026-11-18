@@ -4,6 +4,8 @@ A Chrome Manifest V3 extension for reviewing iNaturalist upload drafts one photo
 
 [繁體中文](README.md) | English
 
+[Download the latest release](https://github.com/leotks0930/inaturalist-photo-triage/releases/latest)
+
 ## Features
 
 - Open the iNaturalist upload page, then launch the extension from the Chrome toolbar.
