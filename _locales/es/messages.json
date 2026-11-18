@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "iNaturalist Photo Triage"
+  },
+  "extensionDescription": {
+    "message": "Sube fotos locales desde la extensión, revisa borradores de iNaturalist una por una y recorta directamente desde los originales locales."
+  },
+  "actionTitle": {
+    "message": "Revisar fotos de iNaturalist una por una"
+  }
+}

@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>iNaturalist Photo Triage 設定</title>
+    <link rel="stylesheet" href="options.css">
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero">
+        <div class="brand">
+          <img src="../../icons/icon-48.png" alt="" width="48" height="48">
+          <div>
+            <p class="eyebrow">iNAT PHOTO TRIAGE</p>
+            <h1>整理偏好</h1>
+          </div>
+        </div>
+        <p class="hero-copy">
+          這些設定只會影響逐張整理介面。所有操作都停留在 iNaturalist 上傳草稿，插件不會提交觀察。
+        </p>
+      </header>
+
+      <form id="settingsForm">
+        <section class="panel highlight">
+          <div class="panel-heading">
+            <div>
+              <p class="section-number">01</p>
+              <h2>每批照片上限</h2>
+            </div>
+            <div class="number-field">
+              <input id="batchLimit" name="batchLimit" type="number" min="1" max="100" step="1" required>
+              <span>張</span>
+            </div>
+          </div>
+          <p class="help">
+            每次只把最前面的 N 張照片放進整理佇列。完成後可以從 Popup 或完成畫面繼續下一批。
+          </p>
+          <div class="range-hint">
+            <span>1 張</span>
+            <span>100 張</span>
+          </div>
+        </section>
+
+        <section class="panel">
+          <p class="section-number">02</p>
+          <h2>操作節奏</h2>
+
+          <label class="toggle-row">
+            <span>
+              <strong>操作後自動前進</strong>
+              <small>按下合併、分開或刪除後，直接顯示下一張。</small>
+            </span>
+            <input id="autoAdvance" name="autoAdvance" type="checkbox">
+            <span class="switch" aria-hidden="true"></span>
+          </label>
+
+          <label class="toggle-row">
+            <span>
+              <strong>刪除前再次確認</strong>
+              <small>避免在快速整理時誤刪照片。</small>
+            </span>
+            <input id="confirmDelete" name="confirmDelete" type="checkbox">
+            <span class="switch" aria-hidden="true"></span>
+          </label>
+
+          <label class="toggle-row">
+            <span>
+              <strong>顯示照片檔名</strong>
+              <small>在逐張預覽中顯示原始檔名。</small>
+            </span>
+            <input id="showFilename" name="showFilename" type="checkbox">
+            <span class="switch" aria-hidden="true"></span>
+          </label>
+        </section>
+
+        <section class="panel">
+          <p class="section-number">03</p>
+          <h2>語言</h2>
+          <label class="language-row" for="language">
+            <span>
+              <strong>介面語言</strong>
+              <small>套用至 Popup、設定頁和逐張整理介面。</small>
+            </span>
+            <select id="language" name="language"></select>
+          </label>
+        </section>
+
+        <section class="keyboard-card">
+          <p class="eyebrow">KEYBOARD</p>
+          <h2>整理時可用快捷鍵</h2>
+          <div class="shortcut-grid">
+            <span><kbd>1</kbd> 合併到前一組</span>
+            <span><kbd>2</kbd> 分開</span>
+            <span><kbd>3</kbd> 刪除</span>
+            <span><kbd>4</kbd> 選擇舊群組</span>
+            <span><kbd>←</kbd><kbd>→</kbd> 上一張／下一張</span>
+            <span><kbd>+</kbd><kbd>-</kbd> 放大／縮小</span>
+            <span><kbd>0</kbd> 重設縮放</span>
+            <span><kbd>Enter</kbd><kbd>Enter</kbd> 確認刪除</span>
+            <span><kbd>Esc</kbd> 關閉介面</span>
+          </div>
+        </section>
+
+        <div class="action-row">
+          <button class="secondary-button" id="resetButton" type="button">恢復預設</button>
+          <div class="save-group">
+            <span id="saveStatus" role="status" aria-live="polite"></span>
+            <button class="primary-button" type="submit">儲存設定</button>
+          </div>
+        </div>
+      </form>
+
+      <footer>
+        <span>iNaturalist Photo Triage 0.5.0</span>
+        <span>沒有後端 · 沒有帳號資料 · 沒有自動提交</span>
+      </footer>
+    </div>
+
+    <script src="../shared/i18n.js"></script>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

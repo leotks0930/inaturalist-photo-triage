@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "iNaturalist Photo Triage"
+  },
+  "extensionDescription": {
+    "message": "拡張機能からローカル写真をアップロードし、iNaturalist の下書きを1枚ずつ整理。ローカル原画像から直接トリミングできます。"
+  },
+  "actionTitle": {
+    "message": "iNaturalist の写真を1枚ずつ整理"
+  }
+}

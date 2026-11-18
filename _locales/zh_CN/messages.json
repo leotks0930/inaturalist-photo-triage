@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "iNaturalist Photo Triage"
+  },
+  "extensionDescription": {
+    "message": "从插件上传本地照片，逐张整理 iNaturalist 草稿，并可直接使用本地原图裁切。"
+  },
+  "actionTitle": {
+    "message": "逐张整理 iNaturalist 照片"
+  }
+}

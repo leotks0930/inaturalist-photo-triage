@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>iNaturalist Photo Triage</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <img src="../../icons/icon-48.png" alt="" width="38" height="38">
+          <div>
+            <p class="eyebrow">iNaturalist</p>
+            <h1>Photo Triage</h1>
+          </div>
+        </div>
+        <button class="icon-button" id="settingsButton" type="button" title="設定" aria-label="開啟設定">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 8.25A3.75 3.75 0 1 0 12 15.75 3.75 3.75 0 0 0 12 8.25Zm8.1 4.6v-1.7l-2.02-.55a6.24 6.24 0 0 0-.58-1.4l1.06-1.82-1.2-1.2-1.82 1.06a6.24 6.24 0 0 0-1.4-.58L13.59 4h-1.7l-.55 2.02a6.24 6.24 0 0 0-1.4.58L8.12 5.54l-1.2 1.2 1.06 1.82c-.26.43-.46.9-.58 1.4L5.38 10.5v1.7l2.02.55c.12.5.32.97.58 1.4l-1.06 1.82 1.2 1.2 1.82-1.06c.43.26.9.46 1.4.58l.55 2.02h1.7l.55-2.02c.5-.12.97-.32 1.4-.58l1.82 1.06 1.2-1.2-1.06-1.82c.26-.43.46-.9.58-1.4l2.02-.55Z" fill="currentColor"/>
+          </svg>
+        </button>
+      </header>
+
+      <main>
+        <section class="intro">
+          <p class="eyebrow">FIELD WORKFLOW</p>
+          <h2>一張一張，整理乾淨。</h2>
+          <p>把照片合併到前一組、獨立分開，或直接套用本機原圖裁切。</p>
+        </section>
+
+        <section class="status-card" id="statusCard" aria-live="polite">
+          <div class="status-loading">
+            <span class="spinner" aria-hidden="true"></span>
+            <span>正在檢查上傳頁…</span>
+          </div>
+        </section>
+
+        <button class="primary-button" id="startButton" type="button" disabled>
+          <span id="startButtonLabel">檢查頁面中</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+
+        <p class="safety-note">
+          <span aria-hidden="true"></span>
+          只整理上傳草稿，不會按下「提交觀察」。
+        </p>
+      </main>
+
+      <footer>
+        <span>本批上限：<strong id="limitLabel">20</strong> 張</span>
+        <button id="rescanButton" type="button">重新掃描</button>
+      </footer>
+    </div>
+
+    <script src="../shared/i18n.js"></script>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

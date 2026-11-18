@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "iNaturalist Photo Triage"
+  },
+  "extensionDescription": {
+    "message": "Upload local photos from the extension, review iNaturalist drafts one by one, and crop directly from local originals."
+  },
+  "actionTitle": {
+    "message": "Review iNaturalist photos one by one"
+  }
+}
