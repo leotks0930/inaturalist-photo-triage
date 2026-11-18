@@ -696,6 +696,23 @@ kbd {
   color: #fffdf7;
 }
 
+.action-first-group {
+  border-color: rgba(201, 137, 58, 0.28);
+  background:
+    linear-gradient(135deg, rgba(63, 95, 70, 0.97), rgba(41, 66, 52, 0.98));
+  box-shadow: 0 8px 20px rgba(45, 70, 54, 0.17);
+  color: #fffdf7;
+}
+
+.action-first-group .action-icon {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.action-first-group:hover:not(:disabled) {
+  background:
+    linear-gradient(135deg, rgba(41, 66, 52, 0.98), rgba(32, 51, 40, 0.99));
+}
+
 .action-merge .action-icon {
   background: rgba(255, 255, 255, 0.12);
 }
@@ -1070,15 +1087,29 @@ kbd {
   gap: 9px;
 }
 
-.color-preview-canvas {
-  display: block;
+.color-preview-viewport {
+  position: relative;
+  display: flex;
   width: 100%;
   height: min(48vh, 540px);
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
   border: 1px solid rgba(15, 22, 18, 0.6);
   border-radius: 14px;
   background:
     radial-gradient(circle at 50% 45%, #26312a, #111713 72%),
     #111713;
+}
+
+.color-preview-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(circle at 50% 45%, #26312a, #111713 72%),
+    #111713;
+  transform-origin: center center;
   object-fit: contain;
 }
 
@@ -1095,7 +1126,7 @@ kbd {
   position: absolute;
   z-index: 3;
   top: 11px;
-  right: 11px;
+  left: 11px;
   min-height: 30px;
   padding: 0 10px;
   border: 1px solid rgba(255, 255, 255, 0.13);
@@ -1106,6 +1137,64 @@ kbd {
   font-size: 9px;
   font-weight: 800;
   backdrop-filter: blur(9px);
+}
+
+.editor-zoom-toolbar {
+  position: absolute;
+  z-index: 5;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  background: rgba(15, 22, 18, 0.8);
+  color: rgba(255, 253, 247, 0.84);
+  backdrop-filter: blur(10px);
+}
+
+.editor-zoom-toolbar button {
+  min-width: 28px;
+  height: 27px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.editor-zoom-toolbar button:hover {
+  background: rgba(255, 255, 255, 0.11);
+  color: #fffdf7;
+}
+
+.editor-zoom-toolbar .editor-zoom-readout {
+  min-width: 48px;
+  color: #e4c18b;
+  font-size: 8px;
+}
+
+.crop-zoom-stage {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  max-height: 60vh;
+  transform-origin: center center;
+}
+
+.color-preview-viewport.is-zoomed,
+.crop-workspace.is-zoomed {
+  cursor: grab;
+}
+
+.color-preview-viewport.is-panning,
+.crop-workspace.is-panning {
+  cursor: grabbing;
 }
 
 .color-compare-button:hover,
@@ -1310,6 +1399,70 @@ kbd {
   max-height: min(94vh, 960px);
   flex-direction: column;
   overflow: hidden;
+}
+
+.modal-layer .modal-card.combined-editor-card {
+  display: flex;
+  width: min(1180px, 100%);
+  max-height: min(94vh, 960px);
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.combined-editor-tabs {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: 3px;
+  margin-top: 14px;
+  padding: 3px;
+  border-radius: 10px;
+  background: rgba(63, 95, 70, 0.08);
+}
+
+.combined-editor-tab {
+  min-width: 88px;
+  min-height: 33px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.combined-editor-tab.is-active {
+  background: var(--paper-strong);
+  box-shadow: 0 3px 10px rgba(36, 49, 40, 0.09);
+  color: var(--moss);
+}
+
+.combined-tool-panel {
+  min-height: 0;
+  flex: 1 1 auto;
+  margin-top: 12px;
+  overflow: auto;
+}
+
+.combined-tool-crop {
+  display: flex;
+  flex-direction: column;
+}
+
+.combined-tool-panel .modal-copy {
+  flex: 0 0 auto;
+}
+
+.combined-tool-panel .crop-workspace {
+  flex: 1 1 auto;
+  min-height: 320px;
+}
+
+.combined-tool-panel .modal-actions {
+  flex: 0 0 auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
 }
 
 .modal-card.color-modal-card .color-editor-layout {
@@ -1713,6 +1866,10 @@ kbd {
   }
 
   .color-modal-card {
+    padding: 17px 13px;
+  }
+
+  .combined-editor-card {
     padding: 17px 13px;
   }
 

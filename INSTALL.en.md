@@ -4,7 +4,7 @@ This is a Chrome Manifest V3 extension. No installer or server is required.
 
 ## 1. Extract the ZIP
 
-1. Locate `inaturalist-photo-triage-v0.6.0.zip`.
+1. Locate `inaturalist-photo-triage-v0.6.1.zip`.
 2. macOS: double-click the ZIP.
 3. Windows: right-click the ZIP and choose “Extract All”.
 4. Open the extracted folder and confirm it directly contains:
@@ -52,6 +52,8 @@ https://www.inaturalist.org/observations/upload
 5. In the extension, click “Upload local photos”.
 6. Select local originals. The extension sends them to the iNaturalist uploader.
 7. Review the photos one by one.
+
+The first photo uses “Set as group 1”. Later photos use “New group”. Crop and color tools share one edit workspace, which supports zooming and panning.
 
 ## 5. Languages
 

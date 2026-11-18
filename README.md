@@ -10,12 +10,13 @@ A Chrome Manifest V3 extension for reviewing iNaturalist upload drafts one photo
 
 - Open the iNaturalist upload page, then launch the extension from the Chrome toolbar.
 - Upload local photos through the extension instead of using iNaturalist's upload button.
-- Review one photo at a time and merge, separate, delete, or merge into an earlier group.
+- Review one photo at a time and merge, create a new group, delete, or merge into an earlier group.
+- The first photo uses “Set as group 1”; later photos use “New group”.
 - Enforce iNaturalist's 20-photo limit per observation group.
 - Display EXIF or iNaturalist capture time.
 - Unlimited zoom with cursor-based wheel zoom, panning, double-click 2×, and keyboard controls.
-- Crop directly from local originals. The current draft photo is replaced after the crop is applied.
-- Photoshop-style color workspace with exposure, contrast, highlights, shadows, whites, blacks, temperature, tint, saturation, vibrance, hue, live histogram, and RGB/R/G/B curves.
+- Unified edit workspace with crop and Photoshop-style color tools: exposure, contrast, highlights, shadows, whites, blacks, temperature, tint, saturation, vibrance, hue, live histogram, and RGB/R/G/B curves.
+- Zoom, pan, and reset the image inside the edit workspace.
 - Crop and color edits update the current photo in place and preserve its position in the review queue.
 - Batch limits and behavior settings.
 - Interface languages: English, Traditional Chinese, Simplified Chinese, Japanese, and Spanish.

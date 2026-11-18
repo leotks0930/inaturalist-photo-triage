@@ -313,6 +313,16 @@
     "按住查看原圖": "Hold to view original",
     "直方圖": "Histogram",
     "雙擊重設": "Double-click to reset"
+    ,
+    "編輯照片": "Edit photo",
+    "裁切": "Crop",
+    "調色": "Color",
+    "設為第一組": "Set as group 1",
+    "以這張照片開始第一組": "Start group 1 with this photo",
+    "已設為第一組。": "Set as group 1.",
+    "開新組": "New group",
+    "新組": "New group",
+    "已開新組。": "Created a new group."
   };
 
   const zhCN = {
@@ -558,6 +568,16 @@
     "按住查看原圖": "按住查看原图",
     "直方圖": "直方图",
     "雙擊重設": "双击重置"
+    ,
+    "編輯照片": "编辑照片",
+    "裁切": "裁切",
+    "調色": "调色",
+    "設為第一組": "设为第一组",
+    "以這張照片開始第一組": "以这张照片开始第一组",
+    "已設為第一組。": "已设为第一组。",
+    "開新組": "开新组",
+    "新組": "新组",
+    "已開新組。": "已开新组。"
   };
 
   const ja = {
@@ -802,6 +822,16 @@
     "按住查看原圖": "長押しで元画像を表示",
     "直方圖": "ヒストグラム",
     "雙擊重設": "ダブルクリックでリセット"
+    ,
+    "編輯照片": "写真を編集",
+    "裁切": "トリミング",
+    "調色": "色調整",
+    "設為第一組": "グループ1に設定",
+    "以這張照片開始第一組": "この写真からグループ1を開始",
+    "已設為第一組。": "グループ1に設定しました。",
+    "開新組": "新しいグループ",
+    "新組": "新しいグループ",
+    "已開新組。": "新しいグループを作成しました。"
   };
 
   const es = {
@@ -1058,6 +1088,16 @@
     "按住查看原圖": "Mantener para ver el original",
     "直方圖": "Histograma",
     "雙擊重設": "Doble clic para restablecer"
+    ,
+    "編輯照片": "Editar foto",
+    "裁切": "Recortar",
+    "調色": "Color",
+    "設為第一組": "Establecer como grupo 1",
+    "以這張照片開始第一組": "Comenzar el grupo 1 con esta foto",
+    "已設為第一組。": "Establecido como grupo 1.",
+    "開新組": "Nuevo grupo",
+    "新組": "Nuevo grupo",
+    "已開新組。": "Nuevo grupo creado."
   };
 
   const dictionaries = {

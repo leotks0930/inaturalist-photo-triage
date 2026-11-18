@@ -1,5 +1,5 @@
 (() => {
-  const UI_VERSION = 13;
+  const UI_VERSION = 14;
   const CHANNEL = "inat-photo-triage-v9";
   const MAX_GROUP_PHOTOS = 20;
   const DELETE_CONFIRM_WINDOW_MS = 3000;
@@ -178,6 +178,8 @@
 
     state.visible = false;
     state.modal = null;
+    state.crop = null;
+    state.color = null;
     elements.shell.classList.remove("is-open");
     elements.shell.setAttribute("aria-hidden", "true");
     renderModal();
@@ -566,14 +568,9 @@
                   </svg>
                 </button>
                 <span class="zoom-divider" aria-hidden="true"></span>
-                <button id="cropButton" type="button" data-command="crop" aria-label="裁切本機原圖" disabled>
+                <button id="editButton" type="button" data-command="edit" aria-label="編輯照片" disabled>
                   <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M7 3v14a2 2 0 0 0 2 2h12M3 7h14a2 2 0 0 1 2 2v12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </button>
-                <button id="colorButton" type="button" data-command="color" aria-label="調整顏色" disabled>
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M5 7h14M5 12h14M5 17h14M9 5v4M15 10v4M11 15v4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                    <path d="M7 3v14a2 2 0 0 0 2 2h12M3 7h14a2 2 0 0 1 2 2v12M12 8v8M8 12h8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </button>
               </div>
@@ -609,6 +606,19 @@
             </div>
 
             <div class="action-stack">
+              <button class="action-button action-first-group" id="firstGroupButton" type="button" data-command="set-first-group" hidden>
+                <span class="action-icon">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M5 4v16M5 5h11l-1.6 3.5L16 12H5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+                <span class="action-copy">
+                  <strong>設為第一組</strong>
+                  <small>以這張照片開始第一組</small>
+                </span>
+                <kbd>1</kbd>
+              </button>
+
               <button class="action-button action-merge" type="button" data-command="merge">
                 <span class="action-icon">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -629,7 +639,7 @@
                   </svg>
                 </span>
                 <span class="action-copy">
-                  <strong>Separate</strong>
+                  <strong>開新組</strong>
                   <small id="separateHint">分開成獨立群組</small>
                 </span>
                 <kbd>2</kbd>
@@ -700,7 +710,7 @@
             <p id="summaryCopy">照片已依照你的操作整理。</p>
             <div class="summary-metrics">
               <div><strong id="mergedCount">0</strong><span>合併</span></div>
-              <div><strong id="separatedCount">0</strong><span>分開</span></div>
+              <div><strong id="separatedCount">0</strong><span>新組</span></div>
               <div><strong id="deletedCount">0</strong><span>刪除</span></div>
             </div>
             <div class="summary-actions">
@@ -737,8 +747,7 @@
       "photoError",
       "zoomLabel",
       "zoomInstruction",
-      "cropButton",
-      "colorButton",
+      "editButton",
       "localFileInput",
       "fileName",
       "captureTime",
@@ -767,6 +776,9 @@
     elements.shell = shadow.querySelector(".triage-shell");
     elements.photoFrame = shadow.querySelector(".photo-frame");
     elements.mergeButton = shadow.querySelector('[data-command="merge"]');
+    elements.firstGroupButton = shadow.querySelector(
+      '[data-command="set-first-group"]'
+    );
     elements.separateButton = shadow.querySelector('[data-command="separate"]');
     elements.deleteButton = shadow.querySelector('[data-command="delete"]');
     elements.groupsButton = shadow.querySelector('[data-command="groups"]');
@@ -1068,6 +1080,10 @@
 
     elements.mergeButton.disabled =
       state.busy || !previous || previous.photoCount >= MAX_GROUP_PHOTOS;
+    elements.firstGroupButton.hidden = activePhoto.orderIndex !== 0;
+    elements.firstGroupButton.disabled = state.busy;
+    elements.mergeButton.hidden = activePhoto.orderIndex === 0;
+    elements.separateButton.hidden = activePhoto.orderIndex === 0;
     elements.separateButton.disabled = state.busy || activePhoto.orderIndex === 0;
     elements.deleteButton.disabled = state.busy;
     elements.uploadSourceButton.disabled = state.busy;
@@ -1076,9 +1092,7 @@
       state.busy || availableEarlierGroups.length === 0;
     elements.previousButton.disabled = state.busy || state.currentIndex <= 0;
     elements.nextButton.disabled = state.busy;
-    elements.cropButton.disabled =
-      state.busy || !localEntry?.decodable;
-    elements.colorButton.disabled =
+    elements.editButton.disabled =
       state.busy || !localEntry?.decodable;
     renderQueueStrip();
 
@@ -1138,6 +1152,9 @@
       case "merge":
         await mergeIntoPrevious();
         return;
+      case "set-first-group":
+        await setCurrentAsFirstGroup();
+        return;
       case "separate":
         await separateCurrent();
         return;
@@ -1156,10 +1173,16 @@
         elements.localFileInput.click();
         return;
       case "crop":
-        openCropEditor();
+        openCombinedEditor("crop");
         return;
       case "color":
-        openColorEditor();
+        openCombinedEditor("color");
+        return;
+      case "edit":
+        openCombinedEditor("crop");
+        return;
+      case "edit-tool":
+        switchEditTool(element.dataset.editTool);
         return;
       case "color-tab":
         switchColorTab(element.dataset.colorTab);
@@ -1191,6 +1214,7 @@
       case "close-modal":
         state.modal = null;
         state.crop = null;
+        state.color = null;
         renderModal();
         return;
       case "confirm-delete":
@@ -1227,6 +1251,7 @@
       if (state.modal) {
         state.modal = null;
         state.crop = null;
+        state.color = null;
         renderModal();
       } else {
         close();
@@ -1250,10 +1275,15 @@
       "4": "groups"
     };
 
-    if (keyActions[event.key]) {
+    const keyAction =
+      event.key === "1" && currentPhoto()?.orderIndex === 0
+        ? "set-first-group"
+        : keyActions[event.key];
+
+    if (keyAction) {
       event.preventDefault();
       event.stopPropagation();
-      handleCommand(keyActions[event.key]);
+      handleCommand(keyAction);
       return;
     }
 
@@ -1550,6 +1580,20 @@
     await mergeIntoGroup(target.id);
   }
 
+  async function setCurrentAsFirstGroup() {
+    const photo = currentPhoto();
+    if (!photo || state.busy) {
+      return;
+    }
+    state.processedFileIds.add(photo.fileId);
+    showToast("已設為第一組。");
+    if (state.settings.autoAdvance) {
+      await navigate(1);
+    } else {
+      render();
+    }
+  }
+
   async function mergeIntoGroup(targetGroupId) {
     const photo = currentPhoto();
     if (!photo || state.busy) {
@@ -1597,7 +1641,7 @@
       "separatePhoto",
       { fileId: photo.fileId },
       "separated",
-      "已分開成獨立群組。"
+      "已開新組。"
     );
   }
 
@@ -1707,11 +1751,11 @@
   function setActionBusy(busy) {
     for (const button of [
       elements.mergeButton,
+      elements.firstGroupButton,
       elements.separateButton,
       elements.deleteButton,
       elements.groupsButton,
-      elements.cropButton,
-      elements.colorButton,
+      elements.editButton,
       elements.uploadSourceButton,
       elements.loadSourceButton,
       elements.previousButton,
@@ -1758,11 +1802,18 @@
     } else if (state.modal.type === "color") {
       elements.modalCard.classList.add("color-modal-card");
       renderColorModal(state.modal.photo, state.modal.entry);
+    } else if (state.modal.type === "edit") {
+      elements.modalCard.classList.add("combined-editor-card");
+      renderCombinedEditor(state.modal);
     }
     I18N.translateDom(elements.modalCard);
   }
 
   function openCropEditor() {
+    openCombinedEditor("crop");
+  }
+
+  function openCombinedEditor(activeTool = "crop") {
     const photo = currentPhoto();
     const entry = photo
       ? state.localByPhotoId.get(photo.fileId)
@@ -1779,11 +1830,234 @@
       return;
     }
     state.crop = null;
-    state.modal = { type: "crop", photo, entry };
+    state.color = null;
+    state.modal = { type: "edit", photo, entry, activeTool };
     renderModal();
   }
 
-  function renderCropModal(photo, entry) {
+  function renderCombinedEditor(modal) {
+    const title = document.createElement("h2");
+    title.textContent = "編輯照片";
+
+    const tabs = document.createElement("div");
+    tabs.className = "combined-editor-tabs";
+    for (const [tool, label] of [
+      ["crop", "裁切"],
+      ["color", "調色"]
+    ]) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "combined-editor-tab";
+      button.dataset.command = "edit-tool";
+      button.dataset.editTool = tool;
+      button.classList.toggle("is-active", modal.activeTool === tool);
+      button.textContent = I18N.t(label);
+      tabs.appendChild(button);
+    }
+
+    const cropPanel = document.createElement("div");
+    cropPanel.className = "combined-tool-panel combined-tool-crop";
+    cropPanel.hidden = modal.activeTool !== "crop";
+
+    const colorPanel = document.createElement("div");
+    colorPanel.className = "combined-tool-panel combined-tool-color";
+    colorPanel.hidden = modal.activeTool !== "color";
+
+    elements.modalCard.append(title, tabs, cropPanel, colorPanel);
+    renderCropModal(modal.photo, modal.entry, {
+      container: cropPanel,
+      embedded: true
+    });
+    renderColorModal(modal.photo, modal.entry, {
+      container: colorPanel,
+      embedded: true
+    });
+  }
+
+  function switchEditTool(tool) {
+    if (!state.modal || !["crop", "color"].includes(tool)) {
+      return;
+    }
+    state.modal.activeTool = tool;
+    for (const button of elements.modalCard.querySelectorAll(
+      "[data-command='edit-tool']"
+    )) {
+      button.classList.toggle("is-active", button.dataset.editTool === tool);
+    }
+    const cropPanel = elements.modalCard.querySelector(".combined-tool-crop");
+    const colorPanel = elements.modalCard.querySelector(".combined-tool-color");
+    if (cropPanel) {
+      cropPanel.hidden = tool !== "crop";
+    }
+    if (colorPanel) {
+      colorPanel.hidden = tool !== "color";
+    }
+    if (tool === "color") {
+      drawColorCurve();
+    }
+  }
+
+  function setupEditorZoom(viewport, stage) {
+    const zoom = {
+      scale: 1,
+      translateX: 0,
+      translateY: 0,
+      drag: null
+    };
+    stage.style.transformOrigin = "center center";
+    viewport.style.touchAction = "none";
+
+    const toolbar = document.createElement("div");
+    toolbar.className = "editor-zoom-toolbar";
+    const out = document.createElement("button");
+    out.type = "button";
+    out.textContent = "−";
+    out.title = I18N.t("縮小");
+    out.setAttribute("aria-label", I18N.t("縮小"));
+    const readout = document.createElement("button");
+    readout.type = "button";
+    readout.className = "editor-zoom-readout";
+    readout.textContent = "100%";
+    readout.title = I18N.t("重設縮放");
+    readout.setAttribute("aria-label", I18N.t("重設縮放"));
+    const inside = document.createElement("button");
+    inside.type = "button";
+    inside.textContent = "+";
+    inside.title = I18N.t("放大");
+    inside.setAttribute("aria-label", I18N.t("放大"));
+    toolbar.append(out, readout, inside);
+    viewport.appendChild(toolbar);
+
+    const apply = () => {
+      stage.style.transform = `translate(${zoom.translateX}px, ${zoom.translateY}px) scale(${zoom.scale})`;
+      readout.textContent = `${Math.round(zoom.scale * 100)}%`;
+      viewport.classList.toggle("is-zoomed", zoom.scale > 1.001);
+    };
+
+    const zoomAtPoint = (clientX, clientY, factor) => {
+      const rect = viewport.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const cursorX = clientX - centerX;
+      const cursorY = clientY - centerY;
+      const oldScale = zoom.scale;
+      const nextScale = Math.max(1, oldScale * factor);
+      if (!Number.isFinite(nextScale)) {
+        return;
+      }
+      if (nextScale <= 1.001) {
+        reset();
+        return;
+      }
+      const localX =
+        (cursorX - zoom.translateX) / Math.max(oldScale, 0.000001);
+      const localY =
+        (cursorY - zoom.translateY) / Math.max(oldScale, 0.000001);
+      zoom.scale = nextScale;
+      zoom.translateX = cursorX - localX * nextScale;
+      zoom.translateY = cursorY - localY * nextScale;
+      apply();
+    };
+
+    const zoomCenter = factor => {
+      const rect = viewport.getBoundingClientRect();
+      zoomAtPoint(
+        rect.left + rect.width / 2,
+        rect.top + rect.height / 2,
+        factor
+      );
+    };
+
+    const reset = () => {
+      zoom.scale = 1;
+      zoom.translateX = 0;
+      zoom.translateY = 0;
+      zoom.drag = null;
+      apply();
+    };
+
+    out.addEventListener("click", event => {
+      event.stopPropagation();
+      zoomCenter(1 / 1.35);
+    });
+    inside.addEventListener("click", event => {
+      event.stopPropagation();
+      zoomCenter(1.35);
+    });
+    readout.addEventListener("click", event => {
+      event.stopPropagation();
+      reset();
+    });
+
+    viewport.addEventListener(
+      "wheel",
+      event => {
+        event.preventDefault();
+        zoomAtPoint(
+          event.clientX,
+          event.clientY,
+          Math.exp(-event.deltaY * 0.0016)
+        );
+      },
+      { passive: false }
+    );
+
+    viewport.addEventListener("pointerdown", event => {
+      if (
+        event.button !== 0 ||
+        zoom.scale <= 1 ||
+        event.target.closest(".crop-selection, .editor-zoom-toolbar")
+      ) {
+        return;
+      }
+      zoom.drag = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        baseX: zoom.translateX,
+        baseY: zoom.translateY
+      };
+      viewport.classList.add("is-panning");
+      viewport.setPointerCapture(event.pointerId);
+      event.preventDefault();
+    });
+    viewport.addEventListener("pointermove", event => {
+      if (!zoom.drag || zoom.drag.pointerId !== event.pointerId) {
+        return;
+      }
+      zoom.translateX =
+        zoom.drag.baseX + event.clientX - zoom.drag.startX;
+      zoom.translateY =
+        zoom.drag.baseY + event.clientY - zoom.drag.startY;
+      apply();
+      event.preventDefault();
+    });
+    const endPan = event => {
+      if (!zoom.drag || zoom.drag.pointerId !== event.pointerId) {
+        return;
+      }
+      zoom.drag = null;
+      viewport.classList.remove("is-panning");
+      if (viewport.hasPointerCapture(event.pointerId)) {
+        viewport.releasePointerCapture(event.pointerId);
+      }
+    };
+    viewport.addEventListener("pointerup", endPan);
+    viewport.addEventListener("pointercancel", endPan);
+
+    apply();
+    return {
+      toolbar,
+      reset,
+      getScale: () => zoom.scale
+    };
+  }
+
+  function renderCropModal(
+    photo,
+    entry,
+    { container = elements.modalCard, embedded = false } = {}
+  ) {
     const title = document.createElement("h2");
     title.textContent = "裁切本機原圖";
 
@@ -1816,7 +2090,11 @@
       selection.appendChild(grip);
     }
 
-    workspace.append(image, selection);
+    const zoomStage = document.createElement("div");
+    zoomStage.className = "crop-zoom-stage";
+    zoomStage.append(image, selection);
+    workspace.append(zoomStage);
+    const zoomController = setupEditorZoom(workspace, zoomStage);
 
     const controls = document.createElement("div");
     controls.className = "crop-controls";
@@ -1852,7 +2130,10 @@
     confirm.textContent = "套用裁切";
 
     actions.append(cancel, reset, confirm);
-    elements.modalCard.append(title, copy, workspace, controls, actions);
+    if (!embedded) {
+      container.append(title);
+    }
+    container.append(copy, workspace, controls, actions);
 
     state.crop = {
       photo,
@@ -1862,7 +2143,8 @@
       selection,
       display: null,
       rect: null,
-      drag: null
+      drag: null,
+      zoomController
     };
 
     const initialize = () => initializeCropSelection();
@@ -1931,8 +2213,9 @@
     if (!drag || drag.pointerId !== event.pointerId || !crop.rect) {
       return;
     }
-    const dx = event.clientX - drag.startX;
-    const dy = event.clientY - drag.startY;
+    const zoomScale = crop.zoomController?.getScale() || 1;
+    const dx = (event.clientX - drag.startX) / zoomScale;
+    const dy = (event.clientY - drag.startY) / zoomScale;
     crop.rect = resizeCropRect(
       drag.rect,
       drag.mode,
@@ -2203,18 +2486,14 @@
   }
 
   function openColorEditor() {
-    const photo = currentPhoto();
-    const entry = photo ? state.localByPhotoId.get(photo.fileId) : null;
-    if (!photo || !entry?.decodable) {
-      showToast("請先載入這張照片的本機原圖。", "error");
-      return;
-    }
-    state.color = null;
-    state.modal = { type: "color", photo, entry };
-    renderModal();
+    openCombinedEditor("color");
   }
 
-  function renderColorModal(photo, entry) {
+  function renderColorModal(
+    photo,
+    entry,
+    { container = elements.modalCard, embedded = false } = {}
+  ) {
     const adjustments = {};
     for (const adjustment of COLOR_ADJUSTMENTS) {
       adjustments[adjustment.key] = 0;
@@ -2236,6 +2515,13 @@
     previewPane.className = "color-preview-pane";
     const previewCanvas = document.createElement("canvas");
     previewCanvas.className = "color-preview-canvas";
+    const previewViewport = document.createElement("div");
+    previewViewport.className = "color-preview-viewport";
+    previewViewport.appendChild(previewCanvas);
+    const previewZoom = setupEditorZoom(
+      previewViewport,
+      previewCanvas
+    );
     const histogram = document.createElement("canvas");
     histogram.className = "color-mini-histogram";
     histogram.width = 512;
@@ -2249,7 +2535,11 @@
     const histogramLabel = document.createElement("span");
     histogramLabel.textContent = I18N.t("直方圖");
     histogramCard.append(histogramLabel, histogram);
-    previewPane.append(previewCanvas, compareButton, histogramCard);
+    previewPane.append(
+      previewViewport,
+      compareButton,
+      histogramCard
+    );
 
     const controls = document.createElement("aside");
     controls.className = "color-controls";
@@ -2338,7 +2628,10 @@
     actionRight.append(cancel, apply);
     actions.append(reset, actionRight);
 
-    elements.modalCard.append(title, copy, layout, actions);
+    if (!embedded) {
+      container.append(title);
+    }
+    container.append(copy, layout, actions);
 
     const linear = () => [
       [0, 0],
@@ -2349,6 +2642,8 @@
       entry,
       image: null,
       previewCanvas,
+      previewViewport,
+      previewZoom,
       previewContext: null,
       histogramCanvas: histogram,
       curveCanvas,

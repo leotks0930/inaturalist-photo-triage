@@ -10,7 +10,7 @@
 
 ## 一、解壓縮
 
-1. 找到收到的 `inaturalist-photo-triage-v0.6.0.zip`。
+1. 找到收到的 `inaturalist-photo-triage-v0.6.1.zip`。
 2. macOS：雙擊 ZIP，系統會解壓成一個資料夾。
 3. Windows：右鍵點擊 ZIP，選擇「解壓縮全部」。
 4. 打開解壓後的資料夾，確認裡面可以直接看到：
@@ -66,7 +66,7 @@ https://www.inaturalist.org/observations/upload
 ## 五、逐張整理
 
 - 「合併」：合併到前一個群組。
-- 「Separate」：分開成獨立群組。
+- 「開新組」：建立新的獨立群組；第一張照片使用「設為第一組」。
 - 「刪除」：從本次上傳草稿移除。
 - 「以前的群組」：選擇任何較早的群組。
 - 滾輪可無上限放大照片，放大後可拖曳。
@@ -107,7 +107,7 @@ https://www.inaturalist.org/observations/upload
 
 ### 選擇照片後仍顯示沒有圖片
 
-請更新到 `0.6.0` 或更新版本。舊版可能無法處理 HEIC 等格式。
+請更新到 `0.6.1` 或更新版本。舊版可能無法處理 HEIC 等格式。
 
 ### 上傳卡住
 
