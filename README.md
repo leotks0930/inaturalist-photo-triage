@@ -54,3 +54,7 @@ The extension uses iNaturalist's existing uploader actions instead of simulating
 - iNaturalist uploader internals may change and require updates to `src/page-bridge.js`.
 - The extension targets the current React-based uploader.
 - Reloading the iNaturalist upload page may clear the in-progress draft.
+
+## License
+
+Released under the [MIT License](LICENSE).

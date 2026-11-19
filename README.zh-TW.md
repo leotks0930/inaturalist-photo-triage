@@ -95,3 +95,7 @@ Options page
 - iNaturalist 若大幅改動上傳器內部結構，`page-bridge.js` 需要更新對應的 React prop 名稱。
 - 插件以 Facebook 風格的 HTML5 React 上傳器為目標；若 iNaturalist 改成另一個上傳器，需另做 adapter。
 - 重新整理上傳頁後，iNaturalist 可能不會恢復本次草稿，插件也無法恢復已遺失的頁面狀態。
+
+## 授權
+
+本專案採用 [MIT License](LICENSE)。
