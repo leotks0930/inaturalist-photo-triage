@@ -330,6 +330,19 @@
     "直方圖": "Histogram",
     "雙擊重設": "Double-click to reset"
     ,
+    "裁切與調色會保留在這個編輯工作區，按「套用編輯」時一次套用。":
+      "Crop and color changes stay in this workspace and are applied together with “Apply edits”.",
+    "套用編輯": "Apply edits",
+    "正在輸出編輯…": "Rendering edits…",
+    "正在套用編輯…": "Applying edits…",
+    "沒有可套用的變更。": "There are no changes to apply.",
+    "請等待裁切預覽載入完成。": "Wait for the crop preview to finish loading.",
+    "請等待調色預覽載入完成。": "Wait for the color preview to finish loading.",
+    "無法產生編輯後的照片。": "Could not generate the edited photo.",
+    "已套用裁切與調色，可以繼續整理。":
+      "Crop and color applied. You can continue reviewing.",
+    "已套用裁切與調色；iNaturalist 會繼續在背景完成上傳。":
+      "Crop and color applied. iNaturalist will finish uploading in the background.",
     "編輯照片": "Edit photo",
     "裁切": "Crop",
     "調色": "Color",
@@ -597,6 +610,19 @@
     "直方圖": "直方图",
     "雙擊重設": "双击重置"
     ,
+    "裁切與調色會保留在這個編輯工作區，按「套用編輯」時一次套用。":
+      "裁切与调色会保留在这个编辑工作区，按“应用编辑”时一次应用。",
+    "套用編輯": "应用编辑",
+    "正在輸出編輯…": "正在输出编辑…",
+    "正在套用編輯…": "正在应用编辑…",
+    "沒有可套用的變更。": "没有可应用的更改。",
+    "請等待裁切預覽載入完成。": "请等待裁切预览载入完成。",
+    "請等待調色預覽載入完成。": "请等待调色预览载入完成。",
+    "無法產生編輯後的照片。": "无法生成编辑后的照片。",
+    "已套用裁切與調色，可以繼續整理。":
+      "已应用裁切与调色，可以继续整理。",
+    "已套用裁切與調色；iNaturalist 會繼續在背景完成上傳。":
+      "已应用裁切与调色；iNaturalist 会继续在后台完成上传。",
     "編輯照片": "编辑照片",
     "裁切": "裁切",
     "調色": "调色",
@@ -863,6 +889,19 @@
     "直方圖": "ヒストグラム",
     "雙擊重設": "ダブルクリックでリセット"
     ,
+    "裁切與調色會保留在這個編輯工作區，按「套用編輯」時一次套用。":
+      "トリミングと色調整はこの編集画面に保持され、「編集を適用」でまとめて適用されます。",
+    "套用編輯": "編集を適用",
+    "正在輸出編輯…": "編集を出力中…",
+    "正在套用編輯…": "編集を適用中…",
+    "沒有可套用的變更。": "適用する変更がありません。",
+    "請等待裁切預覽載入完成。": "トリミングプレビューの読み込み完了をお待ちください。",
+    "請等待調色預覽載入完成。": "色調整プレビューの読み込み完了をお待ちください。",
+    "無法產生編輯後的照片。": "編集後の写真を作成できません。",
+    "已套用裁切與調色，可以繼續整理。":
+      "トリミングと色調整を適用しました。整理を続けられます。",
+    "已套用裁切與調色；iNaturalist 會繼續在背景完成上傳。":
+      "トリミングと色調整を適用しました。iNaturalist はバックグラウンドでアップロードを続けます。",
     "編輯照片": "写真を編集",
     "裁切": "トリミング",
     "調色": "色調整",
@@ -1141,6 +1180,19 @@
     "直方圖": "Histograma",
     "雙擊重設": "Doble clic para restablecer"
     ,
+    "裁切與調色會保留在這個編輯工作區，按「套用編輯」時一次套用。":
+      "El recorte y el color se conservan en este espacio y se aplican juntos con «Aplicar ediciones».",
+    "套用編輯": "Aplicar ediciones",
+    "正在輸出編輯…": "Generando ediciones…",
+    "正在套用編輯…": "Aplicando ediciones…",
+    "沒有可套用的變更。": "No hay cambios que aplicar.",
+    "請等待裁切預覽載入完成。": "Espera a que termine de cargar la vista previa del recorte.",
+    "請等待調色預覽載入完成。": "Espera a que termine de cargar la vista previa del color.",
+    "無法產生編輯後的照片。": "No se pudo generar la foto editada.",
+    "已套用裁切與調色，可以繼續整理。":
+      "Recorte y color aplicados. Puedes continuar.",
+    "已套用裁切與調色；iNaturalist 會繼續在背景完成上傳。":
+      "Recorte y color aplicados. iNaturalist terminará la carga en segundo plano.",
     "編輯照片": "Editar foto",
     "裁切": "Recortar",
     "調色": "Color",

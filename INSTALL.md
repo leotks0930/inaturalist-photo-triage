@@ -10,7 +10,7 @@
 
 ## 一、解壓縮
 
-1. 找到收到的 `inaturalist-photo-triage-v0.6.4.zip`。
+1. 找到收到的 `inaturalist-photo-triage-v0.6.5.zip`。
 2. macOS：雙擊 ZIP，系統會解壓成一個資料夾。
 3. Windows：右鍵點擊 ZIP，選擇「解壓縮全部」。
 4. 打開解壓後的資料夾，確認裡面可以直接看到：

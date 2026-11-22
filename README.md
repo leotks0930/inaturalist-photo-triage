@@ -16,6 +16,7 @@ A Chrome Manifest V3 extension for reviewing iNaturalist upload drafts one photo
 - Display EXIF or iNaturalist capture time.
 - Unlimited zoom with cursor-based wheel zoom, panning, double-click 2×, and keyboard controls.
 - Unified edit workspace with crop and Photoshop-style color tools: exposure, contrast, highlights, shadows, whites, blacks, temperature, tint, saturation, vibrance, hue, live histogram, and RGB/R/G/B curves.
+- Crop and color changes stay together while switching tabs and are applied in one save.
 - Zoom, pan, and reset the image inside the edit workspace.
 - Crop and color edits update the current photo in place and preserve its position in the review queue.
 - Batch limits and behavior settings.

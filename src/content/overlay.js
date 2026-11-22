@@ -1,5 +1,5 @@
 (() => {
-  const UI_VERSION = 17;
+  const UI_VERSION = 18;
   const CHANNEL = "inat-photo-triage-v11";
   const MAX_GROUP_PHOTOS = 20;
   const UPLOAD_CHUNK_SIZE = 5;
@@ -1267,13 +1267,20 @@
         resetColorAdjustments();
         return;
       case "confirm-color":
-        await applyColorAdjustments();
+        await applyCombinedEdits();
         return;
       case "reset-crop":
         resetCropSelection();
         return;
       case "confirm-crop":
-        await applyCropAndUpload();
+        await applyCombinedEdits();
+        return;
+      case "save-combined-edits":
+        await applyCombinedEdits();
+        return;
+      case "reset-edits":
+        resetCropSelection();
+        resetColorAdjustments();
         return;
       case "zoom-in":
         zoomAtCenter(1.35);
@@ -1938,7 +1945,41 @@
     colorPanel.className = "combined-tool-panel combined-tool-color";
     colorPanel.hidden = modal.activeTool !== "color";
 
-    elements.modalCard.append(title, tabs, cropPanel, colorPanel);
+    const note = document.createElement("p");
+    note.className = "combined-editor-note";
+    note.textContent =
+      "裁切與調色會保留在這個編輯工作區，按「套用編輯」時一次套用。";
+
+    const actions = document.createElement("div");
+    actions.className = "modal-actions combined-editor-actions";
+    const reset = document.createElement("button");
+    reset.type = "button";
+    reset.className = "ghost-button";
+    reset.dataset.command = "reset-edits";
+    reset.textContent = "重設全部";
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.className = "ghost-button";
+    cancel.dataset.command = "close-modal";
+    cancel.textContent = "取消";
+    const save = document.createElement("button");
+    save.type = "button";
+    save.className = "solid-button";
+    save.dataset.command = "save-combined-edits";
+    save.textContent = "套用編輯";
+    const actionRight = document.createElement("div");
+    actionRight.className = "color-action-right";
+    actionRight.append(cancel, save);
+    actions.append(reset, actionRight);
+
+    elements.modalCard.append(
+      title,
+      tabs,
+      note,
+      cropPanel,
+      colorPanel,
+      actions
+    );
     renderCropModal(modal.photo, modal.entry, {
       container: cropPanel,
       embedded: true
@@ -1966,6 +2007,15 @@
     }
     if (colorPanel) {
       colorPanel.hidden = tool !== "color";
+    }
+    if (
+      tool === "crop" &&
+      state.crop &&
+      !state.crop.display &&
+      state.crop.image?.complete &&
+      state.crop.image.naturalWidth
+    ) {
+      requestAnimationFrame(() => initializeCropSelection());
     }
     if (tool === "color") {
       drawColorCurve();
@@ -2183,32 +2233,31 @@
         : "輸出：JPEG 98%";
     controls.append(sizeLabel, qualityLabel);
 
-    const actions = document.createElement("div");
-    actions.className = "modal-actions crop-actions";
-
-    const cancel = document.createElement("button");
-    cancel.type = "button";
-    cancel.className = "ghost-button";
-    cancel.dataset.command = "close-modal";
-    cancel.textContent = "取消";
-
-    const reset = document.createElement("button");
-    reset.type = "button";
-    reset.className = "ghost-button";
-    reset.dataset.command = "reset-crop";
-    reset.textContent = "重設範圍";
-
-    const confirm = document.createElement("button");
-    confirm.type = "button";
-    confirm.className = "solid-button crop-confirm-button";
-    confirm.dataset.command = "confirm-crop";
-    confirm.textContent = "套用裁切";
-
-    actions.append(cancel, reset, confirm);
     if (!embedded) {
       container.append(title);
     }
-    container.append(copy, workspace, controls, actions);
+    container.append(copy, workspace, controls);
+    if (!embedded) {
+      const actions = document.createElement("div");
+      actions.className = "modal-actions crop-actions";
+      const cancel = document.createElement("button");
+      cancel.type = "button";
+      cancel.className = "ghost-button";
+      cancel.dataset.command = "close-modal";
+      cancel.textContent = "取消";
+      const reset = document.createElement("button");
+      reset.type = "button";
+      reset.className = "ghost-button";
+      reset.dataset.command = "reset-crop";
+      reset.textContent = "重設範圍";
+      const confirm = document.createElement("button");
+      confirm.type = "button";
+      confirm.className = "solid-button crop-confirm-button";
+      confirm.dataset.command = "confirm-crop";
+      confirm.textContent = "套用裁切";
+      actions.append(cancel, reset, confirm);
+      container.appendChild(actions);
+    }
 
     state.crop = {
       photo,
@@ -2249,10 +2298,10 @@
       top: crop.image.offsetTop
     };
     crop.rect = {
-      x: crop.display.width * 0.1,
-      y: crop.display.height * 0.1,
-      width: crop.display.width * 0.8,
-      height: crop.display.height * 0.8
+      x: 0,
+      y: 0,
+      width: crop.display.width,
+      height: crop.display.height
     };
     crop.selection.addEventListener("pointerdown", startCropDrag);
     crop.selection.addEventListener("pointermove", moveCropDrag);
@@ -2381,10 +2430,10 @@
       return;
     }
     crop.rect = {
-      x: crop.display.width * 0.1,
-      y: crop.display.height * 0.1,
-      width: crop.display.width * 0.8,
-      height: crop.display.height * 0.8
+      x: 0,
+      y: 0,
+      width: crop.display.width,
+      height: crop.display.height
     };
     positionCropSelection();
   }
@@ -2461,6 +2510,173 @@
       successMessage: "已套用裁切，可以繼續整理。",
       pendingSuccessMessage:
         "已套用裁切；iNaturalist 會繼續在背景完成上傳。"
+    });
+  }
+
+  async function applyCombinedEdits() {
+    const crop = state.crop;
+    const color = state.color;
+    if (!crop || !color || state.busy) {
+      return;
+    }
+    const hasColorEdit = hasPendingColorAdjustments(color);
+    const cropReady = Boolean(crop.display && crop.rect);
+    const hasCropEdit =
+      cropReady &&
+      (Math.abs(crop.rect.x) > 0.5 ||
+        Math.abs(crop.rect.y) > 0.5 ||
+        Math.abs(crop.rect.width - crop.display.width) > 0.5 ||
+        Math.abs(crop.rect.height - crop.display.height) > 0.5);
+    if (!hasCropEdit && !hasColorEdit) {
+      showToast("沒有可套用的變更。");
+      return;
+    }
+    if (hasColorEdit && !color.image) {
+      showToast("請等待調色預覽載入完成。", "error");
+      return;
+    }
+
+    const saveButton = elements.modalCard.querySelector(
+      '[data-command="save-combined-edits"]'
+    );
+    if (saveButton) {
+      saveButton.disabled = true;
+      saveButton.textContent = I18N.t("正在輸出編輯…");
+    }
+    color.applying = true;
+
+    try {
+      const sourceImage = color.image || crop.image;
+      const sourceWidth = sourceImage.naturalWidth;
+      const sourceHeight = sourceImage.naturalHeight;
+      const sourceX = cropReady
+        ? (crop.rect.x / crop.display.width) * sourceWidth
+        : 0;
+      const sourceY = cropReady
+        ? (crop.rect.y / crop.display.height) * sourceHeight
+        : 0;
+      const sourceCropWidth = cropReady
+        ? (crop.rect.width / crop.display.width) * sourceWidth
+        : sourceWidth;
+      const sourceCropHeight = cropReady
+        ? (crop.rect.height / crop.display.height) * sourceHeight
+        : sourceHeight;
+
+      let width = Math.max(1, Math.round(sourceCropWidth));
+      let height = Math.max(1, Math.round(sourceCropHeight));
+      const scale = Math.min(
+        1,
+        16384 / Math.max(width, height)
+      );
+      width = Math.max(1, Math.round(width * scale));
+      height = Math.max(1, Math.round(height * scale));
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext("2d", {
+        willReadFrequently: hasColorEdit
+      });
+      context.imageSmoothingEnabled = true;
+      context.imageSmoothingQuality = "high";
+      context.drawImage(
+        sourceImage,
+        sourceX,
+        sourceY,
+        sourceCropWidth,
+        sourceCropHeight,
+        0,
+        0,
+        width,
+        height
+      );
+
+      if (hasColorEdit) {
+        const imageData = context.getImageData(0, 0, width, height);
+        applyColorPixels(
+          imageData,
+          color.adjustments,
+          color.curves,
+          false
+        );
+        context.putImageData(imageData, 0, 0);
+      }
+
+      const type =
+        crop.entry.file.type === "image/png"
+          ? "image/png"
+          : "image/jpeg";
+      const blob = await new Promise(resolve =>
+        canvas.toBlob(
+          resolve,
+          type,
+          type === "image/jpeg" ? CROP_JPEG_QUALITY : undefined
+        )
+      );
+      if (!blob) {
+        throw new Error("無法產生編輯後的照片。");
+      }
+
+      const extension = type === "image/png" ? "png" : "jpg";
+      const baseName = crop.entry.file.name.replace(/\.[^.]+$/, "");
+      const fileName = `${baseName}-edit-${Date.now()}.${extension}`;
+      const successMessage =
+        hasCropEdit && hasColorEdit
+          ? "已套用裁切與調色，可以繼續整理。"
+          : hasCropEdit
+            ? "已套用裁切，可以繼續整理。"
+            : "已套用調色，可以繼續整理。";
+      const pendingSuccessMessage =
+        hasCropEdit && hasColorEdit
+          ? "已套用裁切與調色；iNaturalist 會繼續在背景完成上傳。"
+          : hasCropEdit
+            ? "已套用裁切；iNaturalist 會繼續在背景完成上傳。"
+            : "已套用調色；iNaturalist 會繼續在背景完成上傳。";
+
+      await replaceCurrentPhotoWithBlob({
+        photo: crop.photo,
+        blob,
+        fileName,
+        type,
+        width,
+        height,
+        progressMessage: "正在套用編輯…",
+        successMessage,
+        pendingSuccessMessage
+      });
+    } catch (error) {
+      if (saveButton) {
+        saveButton.disabled = false;
+        saveButton.textContent = I18N.t("套用編輯");
+      }
+      color.applying = false;
+      showToast(
+        error instanceof Error ? error.message : String(error),
+        "error"
+      );
+    }
+  }
+
+  function hasPendingColorAdjustments(color) {
+    if (!color) {
+      return false;
+    }
+    if (
+      COLOR_ADJUSTMENTS.some(
+        adjustment => Number(color.adjustments[adjustment.key] || 0) !== 0
+      )
+    ) {
+      return true;
+    }
+    return ["rgb", "r", "g", "b"].some(channel => {
+      const points = color.curves[channel];
+      return !(
+        points.length === 2 &&
+        points[0][0] === 0 &&
+        points[0][1] === 0 &&
+        points[1][0] === 1 &&
+        points[1][1] === 1
+      );
     });
   }
 
@@ -2689,33 +2905,34 @@
 
     layout.append(previewPane, controls);
 
-    const actions = document.createElement("div");
-    actions.className = "modal-actions color-actions";
-    const reset = document.createElement("button");
-    reset.type = "button";
-    reset.className = "ghost-button";
-    reset.dataset.command = "reset-color";
-    reset.textContent = "重設全部";
-    const cancel = document.createElement("button");
-    cancel.type = "button";
-    cancel.className = "ghost-button";
-    cancel.dataset.command = "close-modal";
-    cancel.textContent = "取消";
-    const apply = document.createElement("button");
-    apply.type = "button";
-    apply.className = "solid-button";
-    apply.dataset.command = "confirm-color";
-    apply.textContent = "套用調色";
-
-    const actionRight = document.createElement("div");
-    actionRight.className = "color-action-right";
-    actionRight.append(cancel, apply);
-    actions.append(reset, actionRight);
-
     if (!embedded) {
       container.append(title);
     }
-    container.append(copy, layout, actions);
+    container.append(copy, layout);
+    if (!embedded) {
+      const actions = document.createElement("div");
+      actions.className = "modal-actions color-actions";
+      const reset = document.createElement("button");
+      reset.type = "button";
+      reset.className = "ghost-button";
+      reset.dataset.command = "reset-color";
+      reset.textContent = "重設全部";
+      const cancel = document.createElement("button");
+      cancel.type = "button";
+      cancel.className = "ghost-button";
+      cancel.dataset.command = "close-modal";
+      cancel.textContent = "取消";
+      const apply = document.createElement("button");
+      apply.type = "button";
+      apply.className = "solid-button";
+      apply.dataset.command = "confirm-color";
+      apply.textContent = "套用調色";
+      const actionRight = document.createElement("div");
+      actionRight.className = "color-action-right";
+      actionRight.append(cancel, apply);
+      actions.append(reset, actionRight);
+      container.appendChild(actions);
+    }
 
     const linear = () => [
       [0, 0],
