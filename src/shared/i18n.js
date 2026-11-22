@@ -262,6 +262,10 @@
       "Cropped photo upload failed. Check your connection and try again.",
     "裁切照片已上傳，但無法移除草稿中的原照片。":
       "The crop was uploaded, but the original draft photo could not be removed.",
+    "替換照片沒有加入 iNaturalist 草稿，請再試一次。":
+      "The replacement photo was not added to the iNaturalist draft. Try again.",
+    "iNaturalist 無法上傳這張替換照片。":
+      "iNaturalist could not upload this replacement photo.",
     "目前 iNaturalist 上傳器不支援從插件上傳檔案。":
       "The current iNaturalist uploader does not support uploading from the extension.",
     "沒有選擇要上傳的照片。": "No photos were selected for upload.",
@@ -314,6 +318,10 @@
     "正在套用調色…": "Applying color adjustments…",
     "已套用調色，可以繼續整理。":
       "Color adjustments applied. You can continue reviewing.",
+    "已套用裁切；iNaturalist 會繼續在背景完成上傳。":
+      "Crop applied. iNaturalist will finish uploading in the background.",
+    "已套用調色；iNaturalist 會繼續在背景完成上傳。":
+      "Color adjustments applied. iNaturalist will finish uploading in the background.",
     "照片已處理，但找不到新的照片項目。":
       "The photo was processed, but its new item could not be found."
     ,
@@ -482,6 +490,8 @@
     "已分開成獨立群組。": "已分开成独立群组。",
     "已從本次上傳草稿移除。": "已从本次上传草稿移除。",
     "已套用裁切，可以繼續整理。": "已套用裁切，可以继续整理。",
+    "已套用裁切；iNaturalist 會繼續在背景完成上傳。":
+      "已套用裁切；iNaturalist 会继续在后台完成上传。",
     "正在套用裁切…": "正在套用裁切…",
     "整理介面已經開啟。": "整理界面已经打开。",
     "已載入 {count} 張本機原圖，匹配 {matched} 張。":
@@ -577,6 +587,8 @@
     "無法產生調色照片。": "无法生成调色照片。",
     "正在套用調色…": "正在套用调色…",
     "已套用調色，可以繼續整理。": "已套用调色，可以继续整理。",
+    "已套用調色；iNaturalist 會繼續在背景完成上傳。":
+      "已套用调色；iNaturalist 会继续在后台完成上传。",
     "照片已處理，但找不到新的照片項目。":
       "照片已处理，但找不到新的照片项目。"
     ,
@@ -745,6 +757,8 @@
     "已分開成獨立群組。": "独立したグループに分割しました。",
     "已從本次上傳草稿移除。": "このアップロード下書きから削除しました。",
     "已套用裁切，可以繼續整理。": "トリミングを適用しました。整理を続けられます。",
+    "已套用裁切；iNaturalist 會繼續在背景完成上傳。":
+      "トリミングを適用しました。iNaturalist はバックグラウンドでアップロードを続けます。",
     "正在套用裁切…": "トリミングを適用中…",
     "整理介面已經開啟。": "整理画面は既に開いています。",
     "已載入 {count} 張本機原圖，匹配 {matched} 張。":
@@ -839,6 +853,8 @@
     "無法產生調色照片。": "色調整済み画像を作成できません。",
     "正在套用調色…": "色調整を適用中…",
     "已套用調色，可以繼續整理。": "色調整を適用しました。整理を続けられます。",
+    "已套用調色；iNaturalist 會繼續在背景完成上傳。":
+      "色調整を適用しました。iNaturalist はバックグラウンドでアップロードを続けます。",
     "照片已處理，但找不到新的照片項目。":
       "写真は処理されましたが、新しい項目が見つかりません。"
     ,
@@ -1010,6 +1026,8 @@
     "已從本次上傳草稿移除。": "Eliminada de este borrador.",
     "已套用裁切，可以繼續整理。":
       "Recorte aplicado. Puedes continuar.",
+    "已套用裁切；iNaturalist 會繼續在背景完成上傳。":
+      "Recorte aplicado. iNaturalist terminará la carga en segundo plano.",
     "正在套用裁切…": "Aplicando recorte…",
     "整理介面已經開啟。": "La revisión ya está abierta.",
     "已載入 {count} 張本機原圖，匹配 {matched} 張。":
@@ -1113,6 +1131,8 @@
     "正在套用調色…": "Aplicando ajustes de color…",
     "已套用調色，可以繼續整理。":
       "Ajustes aplicados. Puedes continuar.",
+    "已套用調色；iNaturalist 會繼續在背景完成上傳。":
+      "Ajustes aplicados. iNaturalist terminará la carga en segundo plano.",
     "照片已處理，但找不到新的照片項目。":
       "La foto se procesó, pero no se encontró el nuevo elemento."
     ,

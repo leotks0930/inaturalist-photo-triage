@@ -1,6 +1,6 @@
 (() => {
-  const UI_VERSION = 16;
-  const CHANNEL = "inat-photo-triage-v10";
+  const UI_VERSION = 17;
+  const CHANNEL = "inat-photo-triage-v11";
   const MAX_GROUP_PHOTOS = 20;
   const UPLOAD_CHUNK_SIZE = 5;
   const DELETE_CONFIRM_WINDOW_MS = 3000;
@@ -2458,7 +2458,9 @@
       width: outputWidth,
       height: outputHeight,
       progressMessage: "正在套用裁切…",
-      successMessage: "已套用裁切，可以繼續整理。"
+      successMessage: "已套用裁切，可以繼續整理。",
+      pendingSuccessMessage:
+        "已套用裁切；iNaturalist 會繼續在背景完成上傳。"
     });
   }
 
@@ -2470,7 +2472,8 @@
     width,
     height,
     progressMessage,
-    successMessage
+    successMessage,
+    pendingSuccessMessage = successMessage
   }) {
     if (!photo || state.busy) {
       return false;
@@ -2514,7 +2517,8 @@
           name: fileName,
           type
         },
-        125000
+        30000,
+        [arrayBuffer]
       );
       const uploadedFileId = snapshot.uploadedFileId;
       if (!uploadedFileId) {
@@ -2533,7 +2537,12 @@
       state.snapshot = snapshot;
       matchLocalFilesToPhotos();
       render();
-      showToast(successMessage);
+      const uploadPending =
+        snapshot.replacementUploadState &&
+        !["uploaded", "failed"].includes(
+          snapshot.replacementUploadState
+        );
+      showToast(uploadPending ? pendingSuccessMessage : successMessage);
       return true;
     } catch (error) {
       URL.revokeObjectURL(previewUrl);
@@ -3536,7 +3545,9 @@
         width,
         height,
         progressMessage: "正在套用調色…",
-        successMessage: "已套用調色，可以繼續整理。"
+        successMessage: "已套用調色，可以繼續整理。",
+        pendingSuccessMessage:
+          "已套用調色；iNaturalist 會繼續在背景完成上傳。"
       });
     } catch (error) {
       if (applyButton) {

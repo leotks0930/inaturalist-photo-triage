@@ -1,6 +1,6 @@
 (() => {
-  const CHANNEL = "inat-photo-triage-v10";
-  const BRIDGE_VERSION = 10;
+  const CHANNEL = "inat-photo-triage-v11";
+  const BRIDGE_VERSION = 11;
   const MAX_GROUP_PHOTOS = 20;
 
   if (window.__INAT_REVIEW_BRIDGE__?.version === BRIDGE_VERSION) {
@@ -371,31 +371,24 @@
 
     uploaderProps.onCardDrop([croppedFile], card);
     const latest = await waitForSnapshot(snapshot => {
-      const uploadedPhoto = snapshot.photos.find(
+      const replacementPhoto = snapshot.photos.find(
         photo =>
           photo.cardId === targetCardId &&
-          photo.name === targetName &&
-          photo.uploadState === "uploaded"
+          photo.name === targetName
       );
-      const failedPhoto = snapshot.photos.find(
-        photo =>
-          photo.cardId === targetCardId &&
-          photo.name === targetName &&
-          photo.uploadState === "failed"
-      );
-      if (failedPhoto) {
-        throw new Error("iNaturalist 無法上傳這張裁切照片。");
-      }
-      return Boolean(uploadedPhoto);
-    }, 120000, 200);
+      return Boolean(replacementPhoto);
+    }, 15000, 150);
 
-    const uploadedPhoto = latest.photos.find(
+    const replacementPhoto = latest.photos.find(
       photo =>
         photo.cardId === targetCardId &&
         photo.name === targetName
     );
-    if (!uploadedPhoto || uploadedPhoto.uploadState !== "uploaded") {
-      throw new Error("裁切照片上傳失敗，請檢查網路後再試。");
+    if (!replacementPhoto) {
+      throw new Error("替換照片沒有加入 iNaturalist 草稿，請再試一次。");
+    }
+    if (replacementPhoto.uploadState === "failed") {
+      throw new Error("iNaturalist 無法上傳這張替換照片。");
     }
 
     const originalFileId = String(file.id);
@@ -416,7 +409,8 @@
 
     return {
       ...finalSnapshot,
-      uploadedFileId: uploadedPhoto.fileId
+      uploadedFileId: replacementPhoto.fileId,
+      replacementUploadState: replacementPhoto.uploadState
     };
   }
 
