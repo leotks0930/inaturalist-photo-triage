@@ -175,6 +175,8 @@
       "Added {count} photos. iNaturalist is still uploading {pending} in the background; you can start reviewing.",
     "已加入 {count} 張照片，但其中 {failed} 張上傳失敗。":
       "Added {count} photos, but {failed} failed to upload.",
+    "已加入 {done} / {total} 張照片":
+      "Added {done} / {total} photos",
     "沒有收到任何檔案，請重新按「上傳本機照片」。":
       "No files were received. Press “Upload local photos” again.",
     "沒有可用的圖片檔案。": "No usable image files were found.",
@@ -490,6 +492,8 @@
       "已加入 {count} 张照片；iNaturalist 仍在后台上传 {pending} 张，可以先开始整理。",
     "已加入 {count} 張照片，但其中 {failed} 張上傳失敗。":
       "已加入 {count} 张照片，但其中 {failed} 张上传失败。",
+    "已加入 {done} / {total} 張照片":
+      "已加入 {done} / {total} 张照片",
     "照片沒有加入 iNaturalist 上傳草稿，請重新掃描後再試。":
       "照片没有加入 iNaturalist 上传草稿，请重新扫描后再试。",
     "沒有可用的圖片檔案。": "没有可用的图片文件。",
@@ -751,6 +755,8 @@
       "{count} 枚を追加しました。残り {pending} 枚は iNaturalist がバックグラウンドでアップロード中です。整理を開始できます。",
     "已加入 {count} 張照片，但其中 {failed} 張上傳失敗。":
       "{count} 枚を追加しましたが、{failed} 枚のアップロードに失敗しました。",
+    "已加入 {done} / {total} 張照片":
+      "{done} / {total} 枚を追加しました",
     "照片沒有加入 iNaturalist 上傳草稿，請重新掃描後再試。":
       "写真が iNaturalist のアップロード下書きに追加されませんでした。再スキャンしてからもう一度お試しください。",
     "沒有可用的圖片檔案。": "使用できる画像ファイルがありません。",
@@ -1014,6 +1020,8 @@
       "Se añadieron {count} fotos. iNaturalist sigue subiendo {pending} en segundo plano; puedes empezar a revisar.",
     "已加入 {count} 張照片，但其中 {failed} 張上傳失敗。":
       "Se añadieron {count} fotos, pero {failed} no se pudieron subir.",
+    "已加入 {done} / {total} 張照片":
+      "Se añadieron {done} / {total} fotos",
     "照片沒有加入 iNaturalist 上傳草稿，請重新掃描後再試。":
       "Las fotos no se añadieron al borrador de iNaturalist. Vuelve a escanear e inténtalo de nuevo.",
     "沒有可用的圖片檔案。": "No se encontraron imágenes utilizables.",

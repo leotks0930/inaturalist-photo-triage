@@ -1,7 +1,8 @@
 (() => {
-  const UI_VERSION = 15;
+  const UI_VERSION = 16;
   const CHANNEL = "inat-photo-triage-v10";
   const MAX_GROUP_PHOTOS = 20;
+  const UPLOAD_CHUNK_SIZE = 5;
   const DELETE_CONFIRM_WINDOW_MS = 3000;
   const CROP_JPEG_QUALITY = 0.98;
   const IMAGE_FILE_PATTERN =
@@ -274,21 +275,69 @@
     setActionBusy(true);
 
     try {
-      const payloadFiles = [];
-      for (const entry of loaded) {
-        payloadFiles.push({
-          name: entry.file.name,
-          type: entry.file.type || "image/jpeg",
-          lastModified: entry.file.lastModified,
-          arrayBuffer: await entry.file.arrayBuffer()
-        });
+      const uploadedFileMappings = [];
+      let snapshot = null;
+
+      for (let start = 0; start < loaded.length; start += UPLOAD_CHUNK_SIZE) {
+        const chunk = loaded.slice(start, start + UPLOAD_CHUNK_SIZE);
+        const payloadFiles = [];
+        const transfer = [];
+
+        for (const entry of chunk) {
+          const arrayBuffer = await entry.file.arrayBuffer();
+          payloadFiles.push({
+            name: entry.file.name,
+            type: entry.file.type || "image/jpeg",
+            lastModified: entry.file.lastModified,
+            arrayBuffer
+          });
+          transfer.push(arrayBuffer);
+        }
+
+        const chunkSnapshot = await bridgeRequest(
+          "uploadPhotoFiles",
+          { files: payloadFiles },
+          70000,
+          transfer
+        );
+        snapshot = chunkSnapshot;
+        state.snapshot = chunkSnapshot;
+        for (const mapping of chunkSnapshot.uploadedFileMappings || []) {
+          uploadedFileMappings.push({
+            ...mapping,
+            requestIndex: start + mapping.requestIndex
+          });
+        }
+        updateUploadProgress(
+          Math.min(start + chunk.length, loaded.length),
+          loaded.length
+        );
       }
 
-      const snapshot = await bridgeRequest(
-        "uploadPhotoFiles",
-        { files: payloadFiles },
-        70000
+      const mappedIds = new Set(
+        uploadedFileMappings.map(mapping => mapping.fileId)
       );
+      const mappedPhotos = snapshot.photos.filter(photo =>
+        mappedIds.has(photo.fileId)
+      );
+      snapshot = {
+        ...snapshot,
+        uploadedFileMappings,
+        missingPhotoCount: Math.max(
+          0,
+          loaded.length - uploadedFileMappings.length
+        ),
+        failedUploadNames: mappedPhotos
+          .filter(photo => photo.uploadState === "failed")
+          .map(photo => photo.name),
+        pendingUploadCount:
+          mappedPhotos.filter(
+            photo =>
+              photo.uploadState !== "uploaded" &&
+              photo.uploadState !== "failed"
+          ).length +
+          Math.max(0, loaded.length - uploadedFileMappings.length)
+      };
       state.snapshot = snapshot;
       matchLocalFilesToPhotos();
       for (const mapping of snapshot.uploadedFileMappings || []) {
@@ -3730,6 +3779,17 @@
     I18N.translateDom(elements.loadingLayer);
   }
 
+  function updateUploadProgress(done, total) {
+    const title = elements.loadingLayer.querySelector(".loading-card h2");
+    if (!title) {
+      return;
+    }
+    title.textContent = I18N.format("已加入 {done} / {total} 張照片", {
+      done,
+      total
+    });
+  }
+
   function createStateCloseButton() {
     const closeButton = document.createElement("button");
     closeButton.type = "button";
@@ -3806,7 +3866,12 @@
     };
   }
 
-  function bridgeRequest(action, payload = {}, timeoutMs = 10000) {
+  function bridgeRequest(
+    action,
+    payload = {},
+    timeoutMs = 10000,
+    transfer = []
+  ) {
     return new Promise((resolve, reject) => {
       const requestId = `inat-${Date.now()}-${nextRequestId++}`;
       const timer = window.setTimeout(() => {
@@ -3827,7 +3892,8 @@
           action,
           payload
         },
-        "*"
+        "*",
+        transfer
       );
     });
   }
