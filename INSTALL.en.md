@@ -4,7 +4,7 @@ This is a Chrome Manifest V3 extension. No installer or server is required.
 
 ## 1. Extract the ZIP
 
-1. Locate `inaturalist-photo-triage-v0.6.1.zip`.
+1. Locate `inaturalist-photo-triage-v0.6.2.zip`.
 2. macOS: double-click the ZIP.
 3. Windows: right-click the ZIP and choose “Extract All”.
 4. Open the extracted folder and confirm it directly contains:

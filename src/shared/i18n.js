@@ -153,8 +153,8 @@
       "You do not need iNaturalist's upload button. Choose local originals and the extension sends them to the current draft.",
     "選擇本機照片並上傳": "Choose local photos and upload",
     "正在上傳 {count} 張照片": "Uploading {count} photos",
-    "正在使用本機原檔，透過插件送進 iNaturalist 上傳器。請保持此頁面開啟。":
-      "Sending local originals to the iNaturalist uploader. Keep this page open.",
+    "正在把本機照片加入 iNaturalist 上傳器。照片出現在草稿後即可開始整理，網站會繼續在背景上傳。":
+      "Adding local photos to the iNaturalist uploader. You can start reviewing as soon as the draft entries appear; iNaturalist will continue uploading in the background.",
     "暫時無法整理": "Cannot review right now",
     "已合併到前面的群組。": "Merged into the previous group.",
     "已分開成獨立群組。": "Split into a standalone group.",
@@ -171,6 +171,10 @@
       "Uploaded {count} photos from the extension.",
     "已從插件上傳 {count} 張照片，略過 {skipped} 個非圖片或無法讀取的檔案。":
       "Uploaded {count} photos from the extension and skipped {skipped} unsupported or unreadable files.",
+    "已加入 {count} 張照片；iNaturalist 仍在背景上傳 {pending} 張，可以先開始整理。":
+      "Added {count} photos. iNaturalist is still uploading {pending} in the background; you can start reviewing.",
+    "已加入 {count} 張照片，但其中 {failed} 張上傳失敗。":
+      "Added {count} photos, but {failed} failed to upload.",
     "沒有收到任何檔案，請重新按「上傳本機照片」。":
       "No files were received. Press “Upload local photos” again.",
     "沒有可用的圖片檔案。": "No usable image files were found.",
@@ -264,6 +268,8 @@
       "iNaturalist could not upload “{name}”.",
     "照片上傳尚未完成，請稍後重新掃描。":
       "Photo upload has not completed. Rescan later.",
+    "照片沒有加入 iNaturalist 上傳草稿，請重新掃描後再試。":
+      "The photos were not added to the iNaturalist upload draft. Rescan and try again.",
     "不支援的操作：{action}": "Unsupported action: {action}",
     "第 {group} 組 · {count} 張": "Group {group} · {count} photos",
     "本機原圖 {matched}/{total}": "Local originals {matched}/{total}",
@@ -467,8 +473,8 @@
       "不需要使用 iNaturalist 的上传按钮。选择本地原文件后，插件会把照片送进当前上传草稿。",
     "選擇本機照片並上傳": "选择本地照片并上传",
     "正在上傳 {count} 張照片": "正在上传 {count} 张照片",
-    "正在使用本機原檔，透過插件送進 iNaturalist 上傳器。請保持此頁面開啟。":
-      "正在使用本地原文件，通过插件送进 iNaturalist 上传器。请保持此页面开启。",
+    "正在把本機照片加入 iNaturalist 上傳器。照片出現在草稿後即可開始整理，網站會繼續在背景上傳。":
+      "正在把本地照片加入 iNaturalist 上传器。照片出现在草稿后即可开始整理，网站会继续在后台上传。",
     "暫時無法整理": "暂时无法整理",
     "已合併到前面的群組。": "已合并到前面的群组。",
     "已分開成獨立群組。": "已分开成独立群组。",
@@ -480,6 +486,12 @@
       "已载入 {count} 张本地原图，匹配 {matched} 张。",
     "沒有收到任何檔案，請重新按「上傳本機照片」。":
       "没有收到任何文件，请重新按“上传本地照片”。",
+    "已加入 {count} 張照片；iNaturalist 仍在背景上傳 {pending} 張，可以先開始整理。":
+      "已加入 {count} 张照片；iNaturalist 仍在后台上传 {pending} 张，可以先开始整理。",
+    "已加入 {count} 張照片，但其中 {failed} 張上傳失敗。":
+      "已加入 {count} 张照片，但其中 {failed} 张上传失败。",
+    "照片沒有加入 iNaturalist 上傳草稿，請重新掃描後再試。":
+      "照片没有加入 iNaturalist 上传草稿，请重新扫描后再试。",
     "沒有可用的圖片檔案。": "没有可用的图片文件。",
     "沒有可用的圖片檔案：{detail}": "没有可用的图片文件：{detail}",
     "未知類型": "未知类型",
@@ -722,8 +734,8 @@
       "iNaturalist のアップロードボタンは不要です。ローカル原画像を選ぶと、拡張機能が現在の下書きへ送ります。",
     "選擇本機照片並上傳": "ローカル写真を選んでアップロード",
     "正在上傳 {count} 張照片": "{count} 枚の写真をアップロード中",
-    "正在使用本機原檔，透過插件送進 iNaturalist 上傳器。請保持此頁面開啟。":
-      "ローカル原画像を iNaturalist アップローダーへ送信中です。このページを開いたままにしてください。",
+    "正在把本機照片加入 iNaturalist 上傳器。照片出現在草稿後即可開始整理，網站會繼續在背景上傳。":
+      "ローカル写真を iNaturalist アップローダーへ追加中です。下書きに表示されたら整理を開始できます。アップロードはバックグラウンドで続きます。",
     "暫時無法整理": "現在は整理できません",
     "已合併到前面的群組。": "前のグループに結合しました。",
     "已分開成獨立群組。": "独立したグループに分割しました。",
@@ -735,6 +747,12 @@
       "ローカル原画像を {count} 枚読み込み、{matched} 枚と一致しました。",
     "沒有收到任何檔案，請重新按「上傳本機照片」。":
       "ファイルを受信できませんでした。「ローカル写真をアップロード」を再度押してください。",
+    "已加入 {count} 張照片；iNaturalist 仍在背景上傳 {pending} 張，可以先開始整理。":
+      "{count} 枚を追加しました。残り {pending} 枚は iNaturalist がバックグラウンドでアップロード中です。整理を開始できます。",
+    "已加入 {count} 張照片，但其中 {failed} 張上傳失敗。":
+      "{count} 枚を追加しましたが、{failed} 枚のアップロードに失敗しました。",
+    "照片沒有加入 iNaturalist 上傳草稿，請重新掃描後再試。":
+      "写真が iNaturalist のアップロード下書きに追加されませんでした。再スキャンしてからもう一度お試しください。",
     "沒有可用的圖片檔案。": "使用できる画像ファイルがありません。",
     "沒有可用的圖片檔案：{detail}": "使用できる画像ファイルがありません：{detail}",
     "未知類型": "不明な種類",
@@ -978,8 +996,8 @@
       "No necesitas el botón de carga de iNaturalist. Elige originales locales y la extensión los enviará al borrador actual.",
     "選擇本機照片並上傳": "Elegir fotos locales y subir",
     "正在上傳 {count} 張照片": "Subiendo {count} fotos",
-    "正在使用本機原檔，透過插件送進 iNaturalist 上傳器。請保持此頁面開啟。":
-      "Enviando originales locales al cargador de iNaturalist. Mantén esta página abierta.",
+    "正在把本機照片加入 iNaturalist 上傳器。照片出現在草稿後即可開始整理，網站會繼續在背景上傳。":
+      "Añadiendo fotos locales al cargador de iNaturalist. Puedes empezar la revisión cuando aparezcan en el borrador; iNaturalist seguirá subiéndolas en segundo plano.",
     "暫時無法整理": "No se puede revisar ahora",
     "已合併到前面的群組。": "Combinada con el grupo anterior.",
     "已分開成獨立群組。": "Separada en un grupo independiente.",
@@ -992,6 +1010,12 @@
       "Se cargaron {count} originales y coinciden {matched} fotos.",
     "沒有收到任何檔案，請重新按「上傳本機照片」。":
       "No se recibieron archivos. Pulsa «Subir fotos locales» de nuevo.",
+    "已加入 {count} 張照片；iNaturalist 仍在背景上傳 {pending} 張，可以先開始整理。":
+      "Se añadieron {count} fotos. iNaturalist sigue subiendo {pending} en segundo plano; puedes empezar a revisar.",
+    "已加入 {count} 張照片，但其中 {failed} 張上傳失敗。":
+      "Se añadieron {count} fotos, pero {failed} no se pudieron subir.",
+    "照片沒有加入 iNaturalist 上傳草稿，請重新掃描後再試。":
+      "Las fotos no se añadieron al borrador de iNaturalist. Vuelve a escanear e inténtalo de nuevo.",
     "沒有可用的圖片檔案。": "No se encontraron imágenes utilizables.",
     "沒有可用的圖片檔案：{detail}": "No se encontraron imágenes utilizables: {detail}",
     "未知類型": "tipo desconocido",

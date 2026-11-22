@@ -1,6 +1,6 @@
 (() => {
-  const UI_VERSION = 14;
-  const CHANNEL = "inat-photo-triage-v9";
+  const UI_VERSION = 15;
+  const CHANNEL = "inat-photo-triage-v10";
   const MAX_GROUP_PHOTOS = 20;
   const DELETE_CONFIRM_WINDOW_MS = 3000;
   const CROP_JPEG_QUALITY = 0.98;
@@ -287,7 +287,7 @@
       const snapshot = await bridgeRequest(
         "uploadPhotoFiles",
         { files: payloadFiles },
-        125000
+        70000
       );
       state.snapshot = snapshot;
       matchLocalFilesToPhotos();
@@ -307,20 +307,44 @@
         repairCurrentIndex();
         render();
       }
-      showToast(
-        skipped.length + selection.unsupported.length
-          ? I18N.format(
-              "已從插件上傳 {count} 張照片，略過 {skipped} 個非圖片或無法讀取的檔案。",
-              {
-                count: loaded.length,
-                skipped:
-                  skipped.length + selection.unsupported.length
-              }
-            )
-          : I18N.format("已從插件上傳 {count} 張照片。", {
-              count: loaded.length
-            })
-      );
+      const failedCount = snapshot.failedUploadNames?.length || 0;
+      if (failedCount) {
+        showToast(
+          I18N.format(
+            "已加入 {count} 張照片，但其中 {failed} 張上傳失敗。",
+            {
+              count: loaded.length,
+              failed: failedCount
+            }
+          ),
+          "error"
+        );
+      } else if (snapshot.pendingUploadCount) {
+        showToast(
+          I18N.format(
+            "已加入 {count} 張照片；iNaturalist 仍在背景上傳 {pending} 張，可以先開始整理。",
+            {
+              count: loaded.length,
+              pending: snapshot.pendingUploadCount
+            }
+          )
+        );
+      } else {
+        showToast(
+          skipped.length + selection.unsupported.length
+            ? I18N.format(
+                "已從插件上傳 {count} 張照片，略過 {skipped} 個非圖片或無法讀取的檔案。",
+                {
+                  count: loaded.length,
+                  skipped:
+                    skipped.length + selection.unsupported.length
+                }
+              )
+            : I18N.format("已從插件上傳 {count} 張照片。", {
+                count: loaded.length
+              })
+        );
+      }
     } catch (error) {
       state.busy = false;
       setActionBusy(false);
@@ -1374,6 +1398,8 @@
   async function refreshSnapshotForNavigation() {
     try {
       state.snapshot = await bridgeRequest("snapshot");
+      matchLocalFilesToPhotos();
+      appendUnseenPhotosToSession(state.snapshot);
       repairCurrentIndex();
     } catch (error) {
       showToast(
@@ -3698,7 +3724,7 @@
     });
     const copy = document.createElement("p");
     copy.textContent =
-      "正在使用本機原檔，透過插件送進 iNaturalist 上傳器。請保持此頁面開啟。";
+      "正在把本機照片加入 iNaturalist 上傳器。照片出現在草稿後即可開始整理，網站會繼續在背景上傳。";
     card.append(ring, title, copy);
     elements.loadingLayer.appendChild(card);
     I18N.translateDom(elements.loadingLayer);

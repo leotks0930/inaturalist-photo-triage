@@ -1,6 +1,6 @@
 (() => {
-  const CHANNEL = "inat-photo-triage-v9";
-  const BRIDGE_VERSION = 9;
+  const CHANNEL = "inat-photo-triage-v10";
+  const BRIDGE_VERSION = 10;
   const MAX_GROUP_PHOTOS = 20;
 
   if (window.__INAT_REVIEW_BRIDGE__?.version === BRIDGE_VERSION) {
@@ -444,47 +444,17 @@
 
     const before = snapshot();
     const beforeIds = new Set(before.photos.map(photo => photo.fileId));
-    const beforeCounts = countPhotoNames(before.photos);
-    const beforeFailedNames = new Set(
-      before.photos
-        .filter(photo => photo.uploadState === "failed")
-        .map(photo => photo.name)
-    );
-    const addedCounts = new Map();
-    for (const file of files) {
-      addedCounts.set(file.name, (addedCounts.get(file.name) || 0) + 1);
-    }
-
     uploaderProps.onDrop(files, []);
-    const latest = await waitForSnapshot(snapshot => {
-      const failedPhoto = snapshot.photos.find(
-        photo =>
-          addedCounts.has(photo.name) &&
-          photo.uploadState === "failed" &&
-          !beforeFailedNames.has(photo.name)
-      );
-      if (failedPhoto) {
-        throw new Error(
-          `iNaturalist 無法上傳「${failedPhoto.name}」。`
-        );
-      }
-      const afterCounts = countPhotoNames(snapshot.photos, true);
-      return Array.from(addedCounts.entries()).every(
-        ([name, count]) =>
-          (afterCounts.get(name) || 0) >=
-          (beforeCounts.get(name) || 0) + count
-      );
-    }, 120000, 200);
-
-    const afterCounts = countPhotoNames(latest.photos, true);
-    const allUploaded = Array.from(addedCounts.entries()).every(
-      ([name, count]) =>
-        (afterCounts.get(name) || 0) >=
-        (beforeCounts.get(name) || 0) + count
+    // onDrop creates draft entries before the background uploads finish.
+    // Waiting for every file to become "uploaded" made large batches time out
+    // even though iNaturalist had already accepted all the photos.
+    const latest = await waitForSnapshot(
+      snapshot =>
+        snapshot.photos.filter(photo => !beforeIds.has(photo.fileId)).length >=
+        files.length,
+      60000,
+      200
     );
-    if (!allUploaded) {
-      throw new Error("照片上傳尚未完成，請稍後重新掃描。");
-    }
 
     const remainingNewPhotos = latest.photos
       .filter(photo => !beforeIds.has(photo.fileId))
@@ -510,18 +480,30 @@
       })
       .filter(Boolean);
 
-    return { ...latest, uploadedFileMappings };
-  }
-
-  function countPhotoNames(photos, uploadedOnly = false) {
-    const counts = new Map();
-    for (const photo of photos || []) {
-      if (uploadedOnly && photo.uploadState !== "uploaded") {
-        continue;
-      }
-      counts.set(photo.name, (counts.get(photo.name) || 0) + 1);
+    const newPhotos = latest.photos.filter(
+      photo => !beforeIds.has(photo.fileId)
+    );
+    if (!newPhotos.length) {
+      throw new Error("照片沒有加入 iNaturalist 上傳草稿，請重新掃描後再試。");
     }
-    return counts;
+    const missingPhotoCount = Math.max(0, files.length - newPhotos.length);
+    const failedUploadNames = newPhotos
+      .filter(photo => photo.uploadState === "failed")
+      .map(photo => photo.name);
+    const pendingUploadCount =
+      newPhotos.filter(
+        photo =>
+          photo.uploadState !== "uploaded" &&
+          photo.uploadState !== "failed"
+      ).length + missingPhotoCount;
+
+    return {
+      ...latest,
+      uploadedFileMappings,
+      missingPhotoCount,
+      failedUploadNames,
+      pendingUploadCount
+    };
   }
 
   async function runAction(action, payload = {}) {
